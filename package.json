@@ -14,7 +14,11 @@
   "scripts": {
     "test": "node test_runner.js"
   },
+  "dependencies": {
+    "jsdom": "22.1.0"
+  },
   "devDependencies": {
-    "picocolors": "^1.0.0"
+    "picocolors": "^1.0.0",
+    "@types/jsdom": "21.1.2"
   }
 }

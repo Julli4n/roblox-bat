@@ -1,4 +1,8 @@
-const dntGlobals = {};
+import { JSDOM as DOMParser } from "jsdom";
+export { JSDOM as DOMParser } from "jsdom";
+const dntGlobals = {
+    DOMParser,
+};
 export const dntGlobalThis = createMergeProxy(globalThis, dntGlobals);
 function createMergeProxy(baseObj, extObj) {
     return new Proxy(baseObj, {

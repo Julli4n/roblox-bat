@@ -28,6 +28,7 @@ const dntShim = __importStar(require("../_dnt.shims.js"));
 const constants_js_1 = require("./utils/constants.js");
 const crypto_js_1 = require("./utils/crypto.js");
 const filterObject_js_1 = require("./utils/filterObject.js");
+const parseDOM_node_js_1 = require("./utils/parseDOM.node.js");
 /**
  * Hardware-backed authentication client. This handles generating the headers required.
  */
@@ -92,7 +93,7 @@ class HBAClient {
             let doc;
             if (uncached || !("document" in dntShim.dntGlobalThis) || !document.querySelector(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR)) {
                 const res = await this.fetch(constants_js_1.FETCH_TOKEN_METADATA_URL).then(res => res.text());
-                doc = new DOMParser().parseFromString(res, "text/html");
+                doc = (0, parseDOM_node_js_1.parseDOM)(res);
             }
             else {
                 doc = document;

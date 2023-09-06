@@ -2,6 +2,7 @@ import * as dntShim from "../_dnt.shims.js";
 import { AUTH_TOKEN_SEPARATOR, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, TOKEN_HEADER_NAME } from "./utils/constants.js";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.js";
 import { filterObject } from "./utils/filterObject.js";
+import { parseDOM } from "./utils/parseDOM.node.js";
 /**
  * Hardware-backed authentication client. This handles generating the headers required.
  */
@@ -66,7 +67,7 @@ export class HBAClient {
             let doc;
             if (uncached || !("document" in dntShim.dntGlobalThis) || !document.querySelector(FETCH_TOKEN_METADATA_SELECTOR)) {
                 const res = await this.fetch(FETCH_TOKEN_METADATA_URL).then(res => res.text());
-                doc = new DOMParser().parseFromString(res, "text/html");
+                doc = parseDOM(res);
             }
             else {
                 doc = document;
