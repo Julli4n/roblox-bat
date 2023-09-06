@@ -93,7 +93,7 @@ export class HBAClient {
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
     public async generateBaseHeaders(requestUrl: string, body?: unknown): Promise<Record<string, string>> {
-        if (!this.isUrlIncludedInWhitelist(requestUrl)) {
+        if (!await this.isUrlIncludedInWhitelist(requestUrl)) {
             return {};
         }
         const token = await this.generateBAT(body);
@@ -218,6 +218,17 @@ export class HBAClient {
      * @param url - The target URL.
      */
     public async isUrlIncludedInWhitelist(url: string) {
+        if (!url.includes(".roblox.com")) {
+            return false;
+        }
+        if (this.onSite && globalThis?.location?.href) {
+            try {
+                const targetUrl = new URL(url, location.href);
+                if (!targetUrl.href.includes(".roblox.com")) {
+                    return false;
+                }
+            } catch {/* empty */ }
+        }
         const metadata = await this.getTokenMetadata();
 
         return !!metadata?.isBoundAuthTokenEnabled && metadata.boundAuthTokenWhitelist.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate)) && !metadata.boundAuthTokenExemptlist.some(item => url.includes(item.apiSite))
