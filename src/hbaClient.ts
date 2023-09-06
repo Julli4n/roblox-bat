@@ -67,7 +67,7 @@ export class HBAClient {
             if (params.headers instanceof Headers || Array.isArray(params.headers)) {
                 headerParams = Object.fromEntries(params.headers);
             } else {
-                headerParams = params.headers;
+                headerParams = params.headers as Record<string, string>;
             }
             headers = {
                 ...headers,
