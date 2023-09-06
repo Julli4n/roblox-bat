@@ -46,3 +46,10 @@ jobs:
           FOLDER: npm
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MESSAGE: "Build: ({sha}) {msg}"
+  
+      # Only used if it's triggered from a release
+      - name: Publish on NPM
+        if: github.event_name == 'release' && github.repository == 'Julli4n/roblox-bat'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: cd npm && npm publish --access public
