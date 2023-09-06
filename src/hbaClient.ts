@@ -136,7 +136,7 @@ export class HBAClient {
             }
 
             const isSecureAuthenticationIntentEnabled = el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
-            const isBoundAuthTokenEnabled = true; // el.getAttribute("data-is-bound-auth-token-enabled") === "true";
+            const isBoundAuthTokenEnabled = el.getAttribute("data-is-bound-auth-token-enabled") === "true";
             const boundAuthTokenWhitelist = JSON.parse(el.getAttribute("data-bound-auth-token-whitelist")!).Whitelist.map((item: {
                 sampleRate: string;
             }) => ({
