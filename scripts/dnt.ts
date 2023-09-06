@@ -8,10 +8,7 @@ await build({
         lib: ["ES2021", "DOM"],
     },
     skipSourceOutput: true,
-    shims: {
-        undici: true,
-        crypto: true
-    },
+    shims: {},
     package: {
         name: "roblox-bat",
         version: "0.1.0",

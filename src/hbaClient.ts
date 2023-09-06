@@ -23,6 +23,10 @@ export type HBAClientConstProps = {
      * Whether the current context is on the Roblox site, and will use credentials.
      */
     onSite?: boolean;
+    /**
+     * A supplied CryptoKeyPair.
+     */
+    keys?: CryptoKeyPair;
 };
 
 export type APISiteWhitelistItem = {
@@ -54,6 +58,7 @@ export class HBAClient {
     public headers: Record<string, unknown> = {};
     public cryptoKeyPair: CryptoKeyPair | Promise<CryptoKeyPair | null> | undefined;
     public onSite = false;
+    public suppliedCryptoKeyPair: CryptoKeyPair | undefined;
 
     /**
      * General fetch wrapper for the client. Not for general public use.
@@ -65,6 +70,7 @@ export class HBAClient {
         if (params?.headers) {
             let headerParams: Record<string, string> = {};
             if (params.headers instanceof Headers || Array.isArray(params.headers)) {
+                // @ts-ignore: fine
                 headerParams = Object.fromEntries(params.headers);
             } else {
                 headerParams = params.headers as Record<string, string>;
@@ -130,7 +136,7 @@ export class HBAClient {
             }
 
             const isSecureAuthenticationIntentEnabled = el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
-            const isBoundAuthTokenEnabled = el.getAttribute("data-is-bound-auth-token-enabled") === "true";
+            const isBoundAuthTokenEnabled = true; // el.getAttribute("data-is-bound-auth-token-enabled") === "true";
             const boundAuthTokenWhitelist = JSON.parse(el.getAttribute("data-bound-auth-token-whitelist")!).Whitelist.map((item: {
                 sampleRate: string;
             }) => ({
@@ -164,6 +170,9 @@ export class HBAClient {
      * @returns 
      */
     public async getCryptoKeyPair(uncached?: boolean): Promise<CryptoKeyPair | null> {
+        if (this.suppliedCryptoKeyPair) {
+            return this.suppliedCryptoKeyPair;
+        }
         if (!uncached && await this.cryptoKeyPair) {
             return this.cryptoKeyPair!;
         }
@@ -240,11 +249,13 @@ export class HBAClient {
         cookie,
         targetId,
         onSite,
+        keys
     }: HBAClientConstProps = {}) {
         if (fetch) {
             this._fetchFn = fetch;
         }
         if (headers) {
+            // @ts-ignore: fine
             this.headers = headers instanceof Headers ? Object.fromEntries(headers.entries()) : headers;
         }
 
@@ -254,6 +265,10 @@ export class HBAClient {
 
         if (onSite) {
             this.onSite = onSite;
+        }
+
+        if (keys) {
+            this.suppliedCryptoKeyPair = keys;
         }
 
         const setCookie = cookie ?? globalThis?.document?.cookie;
