@@ -41,7 +41,8 @@ class HBAClient {
         let headers = (0, filterObject_js_1.filterObject)(this.headers);
         if (params?.headers) {
             let headerParams = {};
-            if (params.headers instanceof dntShim.Headers || Array.isArray(params.headers)) {
+            if (params.headers instanceof Headers || Array.isArray(params.headers)) {
+                // @ts-ignore: fine
                 headerParams = Object.fromEntries(params.headers);
             }
             else {
@@ -60,7 +61,7 @@ class HBAClient {
             // @ts-ignore: just incase ts is annoying
             init.credentials = "include";
         }
-        return (this._fetchFn ?? dntShim.fetch)(url, init);
+        return (this._fetchFn ?? fetch)(url, init);
     }
     /**
      * Generate the base headers required, it may be empty or only include `x-bound-auth-token`
@@ -101,7 +102,7 @@ class HBAClient {
                 return null;
             }
             const isSecureAuthenticationIntentEnabled = el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
-            const isBoundAuthTokenEnabled = el.getAttribute("data-is-bound-auth-token-enabled") === "true";
+            const isBoundAuthTokenEnabled = true; // el.getAttribute("data-is-bound-auth-token-enabled") === "true";
             const boundAuthTokenWhitelist = JSON.parse(el.getAttribute("data-bound-auth-token-whitelist")).Whitelist.map((item) => ({
                 ...item,
                 sampleRate: Number(item.sampleRate)
@@ -129,6 +130,9 @@ class HBAClient {
      * @returns
      */
     async getCryptoKeyPair(uncached) {
+        if (this.suppliedCryptoKeyPair) {
+            return this.suppliedCryptoKeyPair;
+        }
         if (!uncached && await this.cryptoKeyPair) {
             return this.cryptoKeyPair;
         }
@@ -192,7 +196,7 @@ class HBAClient {
         const metadata = await this.getTokenMetadata();
         return !!metadata?.isBoundAuthTokenEnabled && metadata.boundAuthTokenWhitelist.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate)) && !metadata.boundAuthTokenExemptlist.some(item => url.includes(item.apiSite));
     }
-    constructor({ fetch, headers, cookie, targetId, onSite, } = {}) {
+    constructor({ fetch, headers, cookie, targetId, onSite, keys } = {}) {
         Object.defineProperty(this, "_fetchFn", {
             enumerable: true,
             configurable: true,
@@ -235,17 +239,27 @@ class HBAClient {
             writable: true,
             value: false
         });
+        Object.defineProperty(this, "suppliedCryptoKeyPair", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
         if (fetch) {
             this._fetchFn = fetch;
         }
         if (headers) {
-            this.headers = headers instanceof dntShim.Headers ? Object.fromEntries(headers.entries()) : headers;
+            // @ts-ignore: fine
+            this.headers = headers instanceof Headers ? Object.fromEntries(headers.entries()) : headers;
         }
         if (cookie) {
             this.cookie = cookie;
         }
         if (onSite) {
             this.onSite = onSite;
+        }
+        if (keys) {
+            this.suppliedCryptoKeyPair = keys;
         }
         const setCookie = cookie ?? globalThis?.document?.cookie;
         if (targetId) {

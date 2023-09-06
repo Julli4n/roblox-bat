@@ -1,8 +1,7 @@
-import * as dntShim from "../../_dnt.shims.js";
 import { TOKEN_SIGNATURE_ALGORITHM } from "./constants.js";
 export async function hashStringSha256(str) {
     const uint8 = new TextEncoder().encode(str);
-    const hashBuffer = await dntShim.crypto.subtle.digest(TOKEN_SIGNATURE_ALGORITHM.hash.name, uint8);
+    const hashBuffer = await crypto.subtle.digest(TOKEN_SIGNATURE_ALGORITHM.hash.name, uint8);
     return arrayBufferToBase64String(hashBuffer);
 }
 export function arrayBufferToBase64String(arrayBuffer) {
@@ -15,7 +14,7 @@ export function arrayBufferToBase64String(arrayBuffer) {
     return btoa(res);
 }
 export async function signWithKey(privateKey, data) {
-    const bufferResult = await dntShim.crypto.subtle.sign(TOKEN_SIGNATURE_ALGORITHM, privateKey, new TextEncoder().encode(data).buffer);
+    const bufferResult = await crypto.subtle.sign(TOKEN_SIGNATURE_ALGORITHM, privateKey, new TextEncoder().encode(data).buffer);
     return arrayBufferToBase64String(bufferResult);
 }
 export function getCryptoKeyPairFromDB(dbName, dbObjectName, dbObjectChildId) {

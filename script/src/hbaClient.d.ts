@@ -1,13 +1,12 @@
-import * as dntShim from "../_dnt.shims.js";
 export type HBAClientConstProps = {
     /**
      * The fetch to be wrapped.
      */
-    fetch?: (url: string, params?: dntShim.RequestInit) => Promise<dntShim.Response>;
+    fetch?: (url: string, params?: RequestInit) => Promise<Response>;
     /**
      * Base request headers.
      */
-    headers?: Record<string, unknown> | dntShim.Headers;
+    headers?: Record<string, unknown> | Headers;
     /**
      * The request cookie. This would generally just be used for getting the browser tracker id (btid) for the DB key name.
      */
@@ -20,6 +19,10 @@ export type HBAClientConstProps = {
      * Whether the current context is on the Roblox site, and will use credentials.
      */
     onSite?: boolean;
+    /**
+     * A supplied CryptoKeyPair.
+     */
+    keys?: CryptoKeyPair;
 };
 export type APISiteWhitelistItem = {
     apiSite: string;
@@ -45,14 +48,15 @@ export declare class HBAClient {
     targetId: string;
     cachedTokenMetadata: TokenMetadata | Promise<TokenMetadata | null> | undefined;
     headers: Record<string, unknown>;
-    cryptoKeyPair: dntShim.CryptoKeyPair | Promise<dntShim.CryptoKeyPair | null> | undefined;
+    cryptoKeyPair: CryptoKeyPair | Promise<CryptoKeyPair | null> | undefined;
     onSite: boolean;
+    suppliedCryptoKeyPair: CryptoKeyPair | undefined;
     /**
      * General fetch wrapper for the client. Not for general public use.
      * @param url - The target URL
      * @param params - The request parameters
      */
-    fetch(url: string, params?: dntShim.RequestInit): Promise<dntShim.Response>;
+    fetch(url: string, params?: RequestInit): Promise<Response>;
     /**
      * Generate the base headers required, it may be empty or only include `x-bound-auth-token`
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
@@ -69,7 +73,7 @@ export declare class HBAClient {
      * @param uncached - Whether it should fetch uncached.
      * @returns
      */
-    getCryptoKeyPair(uncached?: boolean): Promise<dntShim.CryptoKeyPair | null>;
+    getCryptoKeyPair(uncached?: boolean): Promise<CryptoKeyPair | null>;
     /**
      * Generate the bound auth token given a body.
      * @param body - The request body. If the method does not support a body, leave it undefined.
@@ -80,5 +84,5 @@ export declare class HBAClient {
      * @param url - The target URL.
      */
     isUrlIncludedInWhitelist(url: string): Promise<boolean>;
-    constructor({ fetch, headers, cookie, targetId, onSite, }?: HBAClientConstProps);
+    constructor({ fetch, headers, cookie, targetId, onSite, keys }?: HBAClientConstProps);
 }
