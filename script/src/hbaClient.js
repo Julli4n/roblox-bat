@@ -98,7 +98,7 @@ class HBAClient {
             else {
                 doc = document;
             }
-            const el = doc?.querySelector(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR);
+            const el = doc?.querySelector?.(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR);
             if (!el) {
                 return null;
             }
@@ -136,6 +136,9 @@ class HBAClient {
      * @param uncached - Whether it should fetch uncached.
      */
     async getCryptoKeyPair(uncached) {
+        if (!("indexedDB" in dntShim.dntGlobalThis)) {
+            return null;
+        }
         if (this.suppliedCryptoKeyPair) {
             return this.suppliedCryptoKeyPair;
         }
