@@ -136,29 +136,34 @@ export class HBAClient {
                 return null;
             }
 
-            const isSecureAuthenticationIntentEnabled = el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
-            const isBoundAuthTokenEnabled = el.getAttribute("data-is-bound-auth-token-enabled") === "true";
-            const boundAuthTokenWhitelist = JSON.parse(el.getAttribute("data-bound-auth-token-whitelist")!).Whitelist.map((item: {
-                sampleRate: string;
-            }) => ({
-                ...item,
-                sampleRate: Number(item.sampleRate)
-            }))
-            const boundAuthTokenExemptlist = JSON.parse(el.getAttribute("data-bound-auth-token-exemptlist")!).Exemptlist;
-            const hbaIndexedDbName = el.getAttribute("data-hba-indexed-db-name")!;
-            const hbaIndexedDbObjStoreName = el.getAttribute("data-hba-indexed-db-obj-store-name")!;
+            try {
+                const isSecureAuthenticationIntentEnabled = el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
+                const isBoundAuthTokenEnabled = el.getAttribute("data-is-bound-auth-token-enabled") === "true";
+                const boundAuthTokenWhitelist = JSON.parse(el.getAttribute("data-bound-auth-token-whitelist")!).Whitelist.map((item: {
+                    sampleRate: string;
+                }) => ({
+                    ...item,
+                    sampleRate: Number(item.sampleRate)
+                }))
+                const boundAuthTokenExemptlist = JSON.parse(el.getAttribute("data-bound-auth-token-exemptlist")!).Exemptlist;
+                const hbaIndexedDbName = el.getAttribute("data-hba-indexed-db-name")!;
+                const hbaIndexedDbObjStoreName = el.getAttribute("data-hba-indexed-db-obj-store-name")!;
 
-            const tokenMetadata = {
-                isSecureAuthenticationIntentEnabled,
-                isBoundAuthTokenEnabled,
-                boundAuthTokenWhitelist,
-                boundAuthTokenExemptlist,
-                hbaIndexedDbName,
-                hbaIndexedDbObjStoreName
-            };
-            this.cachedTokenMetadata = tokenMetadata;
+                const tokenMetadata = {
+                    isSecureAuthenticationIntentEnabled,
+                    isBoundAuthTokenEnabled,
+                    boundAuthTokenWhitelist,
+                    boundAuthTokenExemptlist,
+                    hbaIndexedDbName,
+                    hbaIndexedDbObjStoreName
+                };
+                this.cachedTokenMetadata = tokenMetadata;
 
-            return tokenMetadata;
+                return tokenMetadata;
+            } catch {
+                this.cachedTokenMetadata = undefined;
+                return null;
+            }
         })();
 
         this.cachedTokenMetadata = promise;
@@ -168,7 +173,6 @@ export class HBAClient {
     /**
      * Fetch the public-private crypto key pair from the indexed DB store.
      * @param uncached - Whether it should fetch uncached.
-     * @returns 
      */
     public async getCryptoKeyPair(uncached?: boolean): Promise<CryptoKeyPair | null> {
         if (this.suppliedCryptoKeyPair) {
