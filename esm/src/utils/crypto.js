@@ -1,13 +1,11 @@
-import { TOKEN_SIGNATURE_ALGORITHM } from "./constants.ts";
-
-export async function hashStringSha256(str?: string): Promise<string> {
+import * as dntShim from "../../_dnt.shims.js";
+import { TOKEN_SIGNATURE_ALGORITHM } from "./constants.js";
+export async function hashStringSha256(str) {
     const uint8 = new TextEncoder().encode(str);
-
-    const hashBuffer = await crypto.subtle.digest(TOKEN_SIGNATURE_ALGORITHM.hash.name, uint8);
+    const hashBuffer = await dntShim.crypto.subtle.digest(TOKEN_SIGNATURE_ALGORITHM.hash.name, uint8);
     return arrayBufferToBase64String(hashBuffer);
 }
-
-export function arrayBufferToBase64String(arrayBuffer: ArrayBuffer): string {
+export function arrayBufferToBase64String(arrayBuffer) {
     let res = "";
     const bytes = new Uint8Array(arrayBuffer);
     // can't just do new TextDecoder().decode(arrayBuffer) :(
@@ -16,18 +14,11 @@ export function arrayBufferToBase64String(arrayBuffer: ArrayBuffer): string {
     }
     return btoa(res);
 }
-
-export async function signWithKey(privateKey: CryptoKey, data: string): Promise<string> {
-    const bufferResult = await crypto.subtle.sign(
-        TOKEN_SIGNATURE_ALGORITHM,
-        privateKey,
-        new TextEncoder().encode(data).buffer
-    );
-
+export async function signWithKey(privateKey, data) {
+    const bufferResult = await dntShim.crypto.subtle.sign(TOKEN_SIGNATURE_ALGORITHM, privateKey, new TextEncoder().encode(data).buffer);
     return arrayBufferToBase64String(bufferResult);
 }
-
-export function getCryptoKeyPairFromDB(dbName: string, dbObjectName: string, dbObjectChildId: string): Promise<CryptoKeyPair | null> {
+export function getCryptoKeyPairFromDB(dbName, dbObjectName, dbObjectChildId) {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(dbName, 1);
         request.onsuccess = () => {
@@ -37,7 +28,7 @@ export function getCryptoKeyPairFromDB(dbName: string, dbObjectName: string, dbO
                 const objectStore = transaction.objectStore(dbObjectName);
                 const get = objectStore.get(dbObjectChildId);
                 get.onsuccess = () => {
-                    resolve(get.result as unknown as CryptoKeyPair);
+                    resolve(get.result);
                 };
                 get.onerror = () => {
                     reject(request.error);
@@ -45,7 +36,8 @@ export function getCryptoKeyPairFromDB(dbName: string, dbObjectName: string, dbO
                 transaction.oncomplete = () => {
                     db.close();
                 };
-            } catch (err) {
+            }
+            catch (err) {
                 reject(err);
             }
         };
