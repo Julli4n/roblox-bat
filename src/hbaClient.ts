@@ -1,6 +1,7 @@
 import { AUTH_TOKEN_SEPARATOR, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, TOKEN_HEADER_NAME } from "./utils/constants.ts";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.ts";
 import { filterObject } from "./utils/filterObject.ts";
+import { parseDOM } from "./utils/parseDOM.ts";
 
 export type HBAClientConstProps = {
     /**
@@ -125,7 +126,7 @@ export class HBAClient {
             let doc: Document;
             if (uncached || !("document" in globalThis) || !document.querySelector(FETCH_TOKEN_METADATA_SELECTOR)) {
                 const res = await this.fetch(FETCH_TOKEN_METADATA_URL).then(res => res.text());
-                doc = new DOMParser().parseFromString(res, "text/html");
+                doc = parseDOM(res);
             } else {
                 doc = document;
             }
