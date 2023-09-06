@@ -71,7 +71,6 @@ export declare class HBAClient {
     /**
      * Fetch the public-private crypto key pair from the indexed DB store.
      * @param uncached - Whether it should fetch uncached.
-     * @returns
      */
     getCryptoKeyPair(uncached?: boolean): Promise<CryptoKeyPair | null>;
     /**
