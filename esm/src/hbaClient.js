@@ -110,14 +110,14 @@ export class HBAClient {
      * @param uncached - Whether it should fetch uncached.
      */
     async getCryptoKeyPair(uncached) {
-        if (!("indexedDB" in dntShim.dntGlobalThis)) {
-            return null;
-        }
         if (this.suppliedCryptoKeyPair) {
             return this.suppliedCryptoKeyPair;
         }
         if (!uncached && await this.cryptoKeyPair) {
             return this.cryptoKeyPair;
+        }
+        if (!("indexedDB" in dntShim.dntGlobalThis)) {
+            return null;
         }
         const promise = (async () => {
             const metadata = await this.getTokenMetadata(uncached);
