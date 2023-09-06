@@ -1,0 +1,14 @@
+{
+    "deno.enable": true,
+    "deno.config": "./deno.jsonc",
+    "deno.suggest.imports.autoDiscover": false,
+    "deno.unstable": true,
+    "editor.inlayHints.enabled": "off",
+    "editor.defaultFormatter": "denoland.vscode-deno",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+        "source.fixAll": true
+    },
+    "workbench.tree.indent": 20
+}
