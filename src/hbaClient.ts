@@ -130,7 +130,7 @@ export class HBAClient {
             } else {
                 doc = document;
             }
-            const el = doc?.querySelector(FETCH_TOKEN_METADATA_SELECTOR);
+            const el = doc?.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR);
 
             if (!el) {
                 return null;
@@ -175,6 +175,9 @@ export class HBAClient {
      * @param uncached - Whether it should fetch uncached.
      */
     public async getCryptoKeyPair(uncached?: boolean): Promise<CryptoKeyPair | null> {
+        if (!("indexedDB" in globalThis)) {
+            return null;
+        }
         if (this.suppliedCryptoKeyPair) {
             return this.suppliedCryptoKeyPair;
         }
