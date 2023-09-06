@@ -29,7 +29,7 @@ await build({
     },
     package: {
         name: "roblox-bat",
-        version: "0.1.0",
+        version: "0.1.1",
         author: "Julli4n",
         license: "MIT",
     },

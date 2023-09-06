@@ -175,14 +175,14 @@ export class HBAClient {
      * @param uncached - Whether it should fetch uncached.
      */
     public async getCryptoKeyPair(uncached?: boolean): Promise<CryptoKeyPair | null> {
-        if (!("indexedDB" in globalThis)) {
-            return null;
-        }
         if (this.suppliedCryptoKeyPair) {
             return this.suppliedCryptoKeyPair;
         }
         if (!uncached && await this.cryptoKeyPair) {
             return this.cryptoKeyPair!;
+        }
+        if (!("indexedDB" in globalThis)) {
+            return null;
         }
 
         const promise = (async (): Promise<CryptoKeyPair | null> => {
