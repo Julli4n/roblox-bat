@@ -13,20 +13,12 @@ export class HBAClient {
      * @param params - The request parameters
      */
     fetch(url, params) {
-        let headers = filterObject(this.headers);
+        const headers = new Headers(filterObject(this.headers));
         if (params?.headers) {
-            let headerParams = {};
-            if (params.headers instanceof Headers || Array.isArray(params.headers)) {
-                // @ts-ignore: fine
-                headerParams = Object.fromEntries(params.headers);
-            }
-            else {
-                headerParams = params.headers;
-            }
-            headers = {
-                ...headers,
-                ...headerParams
-            };
+            const headerParams = new Headers(params.headers);
+            headerParams.forEach((value, key) => {
+                headerParams.set(key, value);
+            });
         }
         const init = {
             ...params,
@@ -35,6 +27,9 @@ export class HBAClient {
         if (this.onSite) {
             // @ts-ignore: just incase ts is annoying
             init.credentials = "include";
+        }
+        else if (this.cookie) {
+            headers.set("cookie", this.cookie);
         }
         return (this._fetchFn ?? fetch)(url, init);
     }
