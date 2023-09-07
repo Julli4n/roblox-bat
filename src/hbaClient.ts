@@ -42,8 +42,8 @@ export type APISiteExemptlistItem = {
 export type TokenMetadata = {
     isSecureAuthenticationIntentEnabled: boolean;
     isBoundAuthTokenEnabledForAllUrls: boolean;
-    boundAuthTokenWhitelist: APISiteWhitelistItem[];
-    boundAuthTokenExemptlist: APISiteExemptlistItem[];
+    boundAuthTokenWhitelist?: APISiteWhitelistItem[];
+    boundAuthTokenExemptlist?: APISiteExemptlistItem[];
     hbaIndexedDbName: string;
     hbaIndexedDbObjStoreName: string;
 };
@@ -250,9 +250,9 @@ export class HBAClient {
 
         return !!metadata && (
             metadata.isBoundAuthTokenEnabledForAllUrls ||
-            metadata.boundAuthTokenWhitelist.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))
+            metadata.boundAuthTokenWhitelist?.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))
         ) &&
-            !metadata.boundAuthTokenExemptlist.some(item => url.includes(item.apiSite))
+            !metadata.boundAuthTokenExemptlist?.some(item => url.includes(item.apiSite))
     }
 
     public constructor({
