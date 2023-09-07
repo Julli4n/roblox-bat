@@ -41,7 +41,7 @@ export type APISiteExemptlistItem = {
 
 export type TokenMetadata = {
     isSecureAuthenticationIntentEnabled: boolean;
-    isBoundAuthTokenEnabled: boolean;
+    isBoundAuthTokenEnabledForAllUrls: boolean;
     boundAuthTokenWhitelist: APISiteWhitelistItem[];
     boundAuthTokenExemptlist: APISiteExemptlistItem[];
     hbaIndexedDbName: string;
@@ -138,20 +138,20 @@ export class HBAClient {
 
             try {
                 const isSecureAuthenticationIntentEnabled = el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
-                const isBoundAuthTokenEnabled = el.getAttribute("data-is-bound-auth-token-enabled") === "true";
-                const boundAuthTokenWhitelist = JSON.parse(el.getAttribute("data-bound-auth-token-whitelist")!).Whitelist.map((item: {
+                const isBoundAuthTokenEnabledForAllUrls = el.getAttribute("data-is-bound-auth-token-enabled") === "true";
+                const boundAuthTokenWhitelist = JSON.parse(el.getAttribute("data-bound-auth-token-whitelist")!)?.Whitelist?.map((item: {
                     sampleRate: string;
                 }) => ({
                     ...item,
                     sampleRate: Number(item.sampleRate)
                 }))
-                const boundAuthTokenExemptlist = JSON.parse(el.getAttribute("data-bound-auth-token-exemptlist")!).Exemptlist;
+                const boundAuthTokenExemptlist = JSON.parse(el.getAttribute("data-bound-auth-token-exemptlist")!)?.Exemptlist;
                 const hbaIndexedDbName = el.getAttribute("data-hba-indexed-db-name")!;
                 const hbaIndexedDbObjStoreName = el.getAttribute("data-hba-indexed-db-obj-store-name")!;
 
                 const tokenMetadata = {
                     isSecureAuthenticationIntentEnabled,
-                    isBoundAuthTokenEnabled,
+                    isBoundAuthTokenEnabledForAllUrls,
                     boundAuthTokenWhitelist,
                     boundAuthTokenExemptlist,
                     hbaIndexedDbName,
@@ -248,7 +248,7 @@ export class HBAClient {
         }
         const metadata = await this.getTokenMetadata();
 
-        return !!metadata?.isBoundAuthTokenEnabled && metadata.boundAuthTokenWhitelist.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate)) && !metadata.boundAuthTokenExemptlist.some(item => url.includes(item.apiSite))
+        return !!metadata && (metadata.isBoundAuthTokenEnabledForAllUrls || metadata.boundAuthTokenWhitelist.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) && !metadata.boundAuthTokenExemptlist.some(item => url.includes(item.apiSite))
     }
 
     public constructor({
