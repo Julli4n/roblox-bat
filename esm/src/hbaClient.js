@@ -111,7 +111,7 @@ export class HBAClient {
         if (!uncached && await this.cryptoKeyPair) {
             return this.cryptoKeyPair;
         }
-        if (!("indexedDB" in dntShim.dntGlobalThis)) {
+        if (!("indexedDB" in dntShim.dntGlobalThis) || !this.targetId) {
             return null;
         }
         const promise = (async () => {
