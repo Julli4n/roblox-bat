@@ -248,7 +248,11 @@ export class HBAClient {
         }
         const metadata = await this.getTokenMetadata();
 
-        return !!metadata && (metadata.isBoundAuthTokenEnabledForAllUrls || metadata.boundAuthTokenWhitelist.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) && !metadata.boundAuthTokenExemptlist.some(item => url.includes(item.apiSite))
+        return !!metadata && (
+            metadata.isBoundAuthTokenEnabledForAllUrls ||
+            metadata.boundAuthTokenWhitelist.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))
+        ) &&
+            !metadata.boundAuthTokenExemptlist.some(item => url.includes(item.apiSite))
     }
 
     public constructor({
