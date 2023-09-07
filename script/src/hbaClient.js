@@ -43,7 +43,7 @@ class HBAClient {
         if (params?.headers) {
             const headerParams = new Headers(params.headers);
             headerParams.forEach((value, key) => {
-                headerParams.set(key, value);
+                headers.set(key, value);
             });
         }
         const init = {
