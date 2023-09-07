@@ -33,7 +33,7 @@ export type APISiteExemptlistItem = {
 };
 export type TokenMetadata = {
     isSecureAuthenticationIntentEnabled: boolean;
-    isBoundAuthTokenEnabled: boolean;
+    isBoundAuthTokenEnabledForAllUrls: boolean;
     boundAuthTokenWhitelist: APISiteWhitelistItem[];
     boundAuthTokenExemptlist: APISiteExemptlistItem[];
     hbaIndexedDbName: string;
