@@ -176,7 +176,7 @@ export class HBAClient {
         if (!uncached && await this.cryptoKeyPair) {
             return this.cryptoKeyPair!;
         }
-        if (!("indexedDB" in globalThis)) {
+        if (!("indexedDB" in globalThis) || !this.targetId) {
             return null;
         }
 
