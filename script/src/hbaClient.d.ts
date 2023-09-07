@@ -34,8 +34,8 @@ export type APISiteExemptlistItem = {
 export type TokenMetadata = {
     isSecureAuthenticationIntentEnabled: boolean;
     isBoundAuthTokenEnabledForAllUrls: boolean;
-    boundAuthTokenWhitelist: APISiteWhitelistItem[];
-    boundAuthTokenExemptlist: APISiteExemptlistItem[];
+    boundAuthTokenWhitelist?: APISiteWhitelistItem[];
+    boundAuthTokenExemptlist?: APISiteExemptlistItem[];
     hbaIndexedDbName: string;
     hbaIndexedDbObjStoreName: string;
 };
@@ -82,6 +82,6 @@ export declare class HBAClient {
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
      */
-    isUrlIncludedInWhitelist(url: string): Promise<boolean>;
+    isUrlIncludedInWhitelist(url: string): Promise<boolean | undefined>;
     constructor({ fetch, headers, cookie, targetId, onSite, keys }?: HBAClientConstProps);
 }
