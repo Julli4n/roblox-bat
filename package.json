@@ -2,8 +2,21 @@
   "module": "./esm/mod.js",
   "main": "./script/mod.js",
   "name": "roblox-bat",
+  "description": "A Deno/NodeJS module to generate Roblox BAT tokens for extensions",
   "version": "0.1.1",
+  "homepage": "https://github.com/Julli4n/roblox-bat",
   "author": "Julli4n",
+  "bugs": {
+    "url": "https://github.com/Julli4n/roblox-bat/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Julli4n/roblox-bat.git"
+  },
+  "keywords": [
+    "roblox",
+    "api"
+  ],
   "license": "MIT",
   "exports": {
     ".": {
