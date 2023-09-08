@@ -62,7 +62,7 @@ export declare class HBAClient {
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    generateBaseHeaders(requestUrl: string, body?: unknown): Promise<Record<string, string>>;
+    generateBaseHeaders(requestUrl: string | URL, body?: unknown): Promise<Record<string, string>>;
     /**
      * Get HBA token metadata.
      * @param uncached - Whether it should fetch uncached.
@@ -82,6 +82,6 @@ export declare class HBAClient {
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
      */
-    isUrlIncludedInWhitelist(url: string): Promise<boolean | undefined>;
+    isUrlIncludedInWhitelist(tryUrl: string | URL): Promise<boolean | undefined>;
     constructor({ fetch, headers, cookie, targetId, onSite, keys }?: HBAClientConstProps);
 }

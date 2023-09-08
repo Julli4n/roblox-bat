@@ -184,8 +184,9 @@ class HBAClient {
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
      */
-    async isUrlIncludedInWhitelist(url) {
-        if (!url.includes(".roblox.com")) {
+    async isUrlIncludedInWhitelist(tryUrl) {
+        const url = tryUrl.toString();
+        if (!url.toString().includes(".roblox.com")) {
             return false;
         }
         if (this.onSite && globalThis?.location?.href) {
