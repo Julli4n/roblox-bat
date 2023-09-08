@@ -94,7 +94,7 @@ export class HBAClient {
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    public async generateBaseHeaders(requestUrl: string, body?: unknown): Promise<Record<string, string>> {
+    public async generateBaseHeaders(requestUrl: string | URL, body?: unknown): Promise<Record<string, string>> {
         if (!await this.isUrlIncludedInWhitelist(requestUrl)) {
             return {};
         }
@@ -229,8 +229,9 @@ export class HBAClient {
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
      */
-    public async isUrlIncludedInWhitelist(url: string) {
-        if (!url.includes(".roblox.com")) {
+    public async isUrlIncludedInWhitelist(tryUrl: string | URL) {
+        const url = tryUrl.toString();
+        if (!url.toString().includes(".roblox.com")) {
             return false;
         }
         if (this.onSite && globalThis?.location?.href) {

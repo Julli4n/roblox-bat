@@ -13,7 +13,9 @@ import { HBAClient } from "roblox-bat";
 const hbaClient = new HBAClient({
     onSite: true,
 });
-const headers = await hbaClient.generateBaseHeaders();
+const headers = await hbaClient.generateBaseHeaders(
+    "https://users.roblox.com/v1/users/authenticated",
+);
 
 await fetch("https://users.roblox.com/v1/users/authenticated", {
     headers,
