@@ -1,5 +1,5 @@
 import * as dntShim from "../_dnt.shims.js";
-import { AUTH_TOKEN_SEPARATOR, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, TOKEN_HEADER_NAME } from "./utils/constants.js";
+import { AUTH_TOKEN_SEPARATOR, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, TOKEN_HEADER_NAME, MATCH_ROBLOX_URL_BASE } from "./utils/constants.js";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.js";
 import { filterObject } from "./utils/filterObject.js";
 import { parseDOM } from "./utils/parseDOM.node.js";
@@ -160,13 +160,13 @@ export class HBAClient {
      */
     async isUrlIncludedInWhitelist(tryUrl) {
         const url = tryUrl.toString();
-        if (!url.toString().includes(".roblox.com")) {
+        if (!url.toString().includes(MATCH_ROBLOX_URL_BASE)) {
             return false;
         }
-        if (this.onSite && globalThis?.location?.href) {
+        if (this.onSite && this.baseUrl) {
             try {
-                const targetUrl = new URL(url, location.href);
-                if (!targetUrl.href.includes(".roblox.com")) {
+                const targetUrl = new URL(url, this.baseUrl);
+                if (!targetUrl.href.includes(MATCH_ROBLOX_URL_BASE)) {
                     return false;
                 }
             }
@@ -226,6 +226,12 @@ export class HBAClient {
             writable: true,
             value: void 0
         });
+        Object.defineProperty(this, "baseUrl", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
         if (fetch) {
             this._fetchFn = fetch;
         }
@@ -238,6 +244,9 @@ export class HBAClient {
         }
         if (onSite) {
             this.onSite = onSite;
+            if (globalThis?.location?.href) {
+                this.baseUrl = globalThis.location.href;
+            }
         }
         if (keys) {
             this.suppliedCryptoKeyPair = keys;

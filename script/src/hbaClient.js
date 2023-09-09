@@ -186,13 +186,13 @@ class HBAClient {
      */
     async isUrlIncludedInWhitelist(tryUrl) {
         const url = tryUrl.toString();
-        if (!url.toString().includes(".roblox.com")) {
+        if (!url.toString().includes(constants_js_1.MATCH_ROBLOX_URL_BASE)) {
             return false;
         }
-        if (this.onSite && globalThis?.location?.href) {
+        if (this.onSite && this.baseUrl) {
             try {
-                const targetUrl = new URL(url, location.href);
-                if (!targetUrl.href.includes(".roblox.com")) {
+                const targetUrl = new URL(url, this.baseUrl);
+                if (!targetUrl.href.includes(constants_js_1.MATCH_ROBLOX_URL_BASE)) {
                     return false;
                 }
             }
@@ -252,6 +252,12 @@ class HBAClient {
             writable: true,
             value: void 0
         });
+        Object.defineProperty(this, "baseUrl", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
         if (fetch) {
             this._fetchFn = fetch;
         }
@@ -264,6 +270,9 @@ class HBAClient {
         }
         if (onSite) {
             this.onSite = onSite;
+            if (globalThis?.location?.href) {
+                this.baseUrl = globalThis.location.href;
+            }
         }
         if (keys) {
             this.suppliedCryptoKeyPair = keys;

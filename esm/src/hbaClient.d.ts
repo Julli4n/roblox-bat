@@ -23,6 +23,10 @@ export type HBAClientConstProps = {
      * A supplied CryptoKeyPair.
      */
     keys?: CryptoKeyPair;
+    /**
+     * The base URL as a string of the client.
+     */
+    baseUrl?: string;
 };
 export type APISiteWhitelistItem = {
     apiSite: string;
@@ -51,6 +55,7 @@ export declare class HBAClient {
     cryptoKeyPair: CryptoKeyPair | Promise<CryptoKeyPair | null> | undefined;
     onSite: boolean;
     suppliedCryptoKeyPair: CryptoKeyPair | undefined;
+    baseUrl: string | undefined;
     /**
      * General fetch wrapper for the client. Not for general public use.
      * @param url - The target URL
