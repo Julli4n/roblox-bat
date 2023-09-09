@@ -88,5 +88,5 @@ export declare class HBAClient {
      * @param url - The target URL.
      */
     isUrlIncludedInWhitelist(tryUrl: string | URL): Promise<boolean | undefined>;
-    constructor({ fetch, headers, cookie, targetId, onSite, keys }?: HBAClientConstProps);
+    constructor({ fetch, headers, cookie, targetId, onSite, keys, baseUrl, }?: HBAClientConstProps);
 }

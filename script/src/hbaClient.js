@@ -203,7 +203,7 @@ class HBAClient {
             metadata.boundAuthTokenWhitelist?.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
             !metadata.boundAuthTokenExemptlist?.some(item => url.includes(item.apiSite));
     }
-    constructor({ fetch, headers, cookie, targetId, onSite, keys } = {}) {
+    constructor({ fetch, headers, cookie, targetId, onSite, keys, baseUrl, } = {}) {
         Object.defineProperty(this, "_fetchFn", {
             enumerable: true,
             configurable: true,
@@ -268,9 +268,12 @@ class HBAClient {
         if (cookie) {
             this.cookie = cookie;
         }
+        if (baseUrl) {
+            this.baseUrl = baseUrl;
+        }
         if (onSite) {
             this.onSite = onSite;
-            if (globalThis?.location?.href) {
+            if (globalThis?.location?.href && !baseUrl) {
                 this.baseUrl = globalThis.location.href;
             }
         }
