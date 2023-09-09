@@ -262,7 +262,8 @@ export class HBAClient {
         cookie,
         targetId,
         onSite,
-        keys
+        keys,
+        baseUrl,
     }: HBAClientConstProps = {}) {
         if (fetch) {
             this._fetchFn = fetch;
@@ -276,9 +277,13 @@ export class HBAClient {
             this.cookie = cookie;
         }
 
+        if (baseUrl) {
+            this.baseUrl = baseUrl;
+        }
+
         if (onSite) {
             this.onSite = onSite;
-            if (globalThis?.location?.href) {
+            if (globalThis?.location?.href && !baseUrl) {
                 this.baseUrl = globalThis.location.href;
             }
         }
