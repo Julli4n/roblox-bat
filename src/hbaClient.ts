@@ -1,4 +1,4 @@
-import { AUTH_TOKEN_SEPARATOR, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, TOKEN_HEADER_NAME } from "./utils/constants.ts";
+import { AUTH_TOKEN_SEPARATOR, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, TOKEN_HEADER_NAME, MATCH_ROBLOX_URL_BASE } from "./utils/constants.ts";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.ts";
 import { filterObject } from "./utils/filterObject.ts";
 import { parseDOM } from "./utils/parseDOM.ts";
@@ -28,6 +28,10 @@ export type HBAClientConstProps = {
      * A supplied CryptoKeyPair.
      */
     keys?: CryptoKeyPair;
+    /**
+     * The base URL as a string of the client.
+     */
+    baseUrl?: string;
 };
 
 export type APISiteWhitelistItem = {
@@ -60,6 +64,7 @@ export class HBAClient {
     public cryptoKeyPair: CryptoKeyPair | Promise<CryptoKeyPair | null> | undefined;
     public onSite = false;
     public suppliedCryptoKeyPair: CryptoKeyPair | undefined;
+    public baseUrl: string | undefined;
 
     /**
      * General fetch wrapper for the client. Not for general public use.
@@ -231,13 +236,13 @@ export class HBAClient {
      */
     public async isUrlIncludedInWhitelist(tryUrl: string | URL) {
         const url = tryUrl.toString();
-        if (!url.toString().includes(".roblox.com")) {
+        if (!url.toString().includes(MATCH_ROBLOX_URL_BASE)) {
             return false;
         }
-        if (this.onSite && globalThis?.location?.href) {
+        if (this.onSite && this.baseUrl) {
             try {
-                const targetUrl = new URL(url, location.href);
-                if (!targetUrl.href.includes(".roblox.com")) {
+                const targetUrl = new URL(url, this.baseUrl);
+                if (!targetUrl.href.includes(MATCH_ROBLOX_URL_BASE)) {
                     return false;
                 }
             } catch {/* empty */ }
@@ -273,6 +278,9 @@ export class HBAClient {
 
         if (onSite) {
             this.onSite = onSite;
+            if (globalThis?.location?.href) {
+                this.baseUrl = globalThis.location.href;
+            }
         }
 
         if (keys) {
