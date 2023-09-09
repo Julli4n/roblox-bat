@@ -47,6 +47,7 @@ const headers = await hbaClient.generateBaseHeaders(
 );
 
 await fetch("https://catalog.roblox.com/v1/catalog/items/details", {
+    method: "POST",
     headers: {
         ...headers,
         "content-type": "application/json",
