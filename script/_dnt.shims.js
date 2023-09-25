@@ -1,12 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dntGlobalThis = exports.DOMParser = void 0;
-const jsdom_1 = require("jsdom");
-var jsdom_2 = require("jsdom");
-Object.defineProperty(exports, "DOMParser", { enumerable: true, get: function () { return jsdom_2.JSDOM; } });
-const dntGlobals = {
-    DOMParser: jsdom_1.JSDOM,
-};
+exports.dntGlobalThis = void 0;
+const dntGlobals = {};
 exports.dntGlobalThis = createMergeProxy(globalThis, dntGlobals);
 function createMergeProxy(baseObj, extObj) {
     return new Proxy(baseObj, {
