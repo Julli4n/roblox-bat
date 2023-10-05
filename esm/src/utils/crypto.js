@@ -17,7 +17,11 @@ export async function signWithKey(privateKey, data) {
     const bufferResult = await crypto.subtle.sign(TOKEN_SIGNATURE_ALGORITHM, privateKey, new TextEncoder().encode(data).buffer);
     return arrayBufferToBase64String(bufferResult);
 }
-export function getCryptoKeyPairFromDB(dbName, dbObjectName, dbObjectChildId) {
+export async function getCryptoKeyPairFromDB(dbName, dbObjectName, dbObjectChildId) {
+    const databases = await indexedDB.databases();
+    if (!databases.some(item => item.name === dbName)) {
+        return null;
+    }
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(dbName, 1);
         request.onsuccess = () => {
