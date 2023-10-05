@@ -47,7 +47,7 @@ class HBAClient {
         }
         const init = {
             ...params,
-            headers
+            headers,
         };
         if (this.onSite) {
             // @ts-ignore: just incase ts is annoying
@@ -72,7 +72,7 @@ class HBAClient {
             return {};
         }
         return {
-            [constants_js_1.TOKEN_HEADER_NAME]: token
+            [constants_js_1.TOKEN_HEADER_NAME]: token,
         };
     }
     /**
@@ -90,38 +90,53 @@ class HBAClient {
             let boundAuthTokenExemptlist;
             let hbaIndexedDbName;
             let hbaIndexedDbObjStoreName;
-            if (uncached || !("document" in dntShim.dntGlobalThis) || !document.querySelector(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR)) {
-                const match = (await this.fetch(constants_js_1.FETCH_TOKEN_METADATA_URL).then(res => res.text())).match(constants_js_1.FETCH_TOKEN_METADATA_REGEX);
-                if (!match) {
-                    return null;
+            let doc;
+            const canUseDoc = "DOMParser" in dntShim.dntGlobalThis && "document" in dntShim.dntGlobalThis;
+            if (uncached || !canUseDoc ||
+                !document.querySelector?.(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR)) {
+                const text = await this.fetch(constants_js_1.FETCH_TOKEN_METADATA_URL).then((res) => res.text());
+                if (!canUseDoc) {
+                    const match = text.match(constants_js_1.FETCH_TOKEN_METADATA_REGEX);
+                    if (!match) {
+                        return null;
+                    }
+                    try {
+                        isSecureAuthenticationIntentEnabled = match[2] === "true";
+                        isBoundAuthTokenEnabledForAllUrls = match[4] === "true";
+                        boundAuthTokenWhitelist = JSON.parse((0, constants_js_1.decodeEntities)(match[6]))?.Whitelist
+                            ?.map((item) => ({
+                            ...item,
+                            sampleRate: Number(item.sampleRate),
+                        }));
+                        boundAuthTokenExemptlist = JSON.parse((0, constants_js_1.decodeEntities)(match[8]))?.Exemptlist;
+                        hbaIndexedDbName = match[10];
+                        hbaIndexedDbObjStoreName = match[12];
+                    }
+                    catch {
+                        this.cachedTokenMetadata = undefined;
+                        return null;
+                    }
                 }
-                try {
-                    isSecureAuthenticationIntentEnabled = match[2] === "true";
-                    isBoundAuthTokenEnabledForAllUrls = match[4] === "true";
-                    boundAuthTokenWhitelist = JSON.parse((0, constants_js_1.decodeEntities)(match[6]))?.Whitelist?.map((item) => ({
-                        ...item,
-                        sampleRate: Number(item.sampleRate)
-                    }));
-                    boundAuthTokenExemptlist = JSON.parse((0, constants_js_1.decodeEntities)(match[8]))?.Exemptlist;
-                    hbaIndexedDbName = match[10];
-                    hbaIndexedDbObjStoreName = match[12];
-                }
-                catch {
-                    this.cachedTokenMetadata = undefined;
-                    return null;
+                else {
+                    doc = new DOMParser().parseFromString(text, "text/html");
                 }
             }
             else {
-                const el = document.querySelector?.(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR);
+                doc = document;
+            }
+            if (doc) {
+                const el = doc.querySelector?.(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR);
                 if (!el) {
                     return null;
                 }
                 try {
-                    isSecureAuthenticationIntentEnabled = el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
-                    isBoundAuthTokenEnabledForAllUrls = el.getAttribute("data-is-bound-auth-token-enabled") === "true";
+                    isSecureAuthenticationIntentEnabled =
+                        el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
+                    isBoundAuthTokenEnabledForAllUrls =
+                        el.getAttribute("data-is-bound-auth-token-enabled") === "true";
                     boundAuthTokenWhitelist = JSON.parse(el.getAttribute("data-bound-auth-token-whitelist"))?.Whitelist?.map((item) => ({
                         ...item,
-                        sampleRate: Number(item.sampleRate)
+                        sampleRate: Number(item.sampleRate),
                     }));
                     boundAuthTokenExemptlist = JSON.parse(el.getAttribute("data-bound-auth-token-exemptlist"))?.Exemptlist;
                     hbaIndexedDbName = el.getAttribute("data-hba-indexed-db-name");
@@ -133,12 +148,12 @@ class HBAClient {
                 }
             }
             const tokenMetadata = {
-                isSecureAuthenticationIntentEnabled,
-                isBoundAuthTokenEnabledForAllUrls,
-                boundAuthTokenWhitelist,
-                boundAuthTokenExemptlist,
-                hbaIndexedDbName,
-                hbaIndexedDbObjStoreName
+                isSecureAuthenticationIntentEnabled: isSecureAuthenticationIntentEnabled,
+                isBoundAuthTokenEnabledForAllUrls: isBoundAuthTokenEnabledForAllUrls,
+                boundAuthTokenWhitelist: boundAuthTokenWhitelist,
+                boundAuthTokenExemptlist: boundAuthTokenExemptlist,
+                hbaIndexedDbName: hbaIndexedDbName,
+                hbaIndexedDbObjStoreName: hbaIndexedDbObjStoreName,
             };
             this.cachedTokenMetadata = tokenMetadata;
             return tokenMetadata;
@@ -220,8 +235,8 @@ class HBAClient {
         }
         const metadata = await this.getTokenMetadata();
         return !!metadata && (metadata.isBoundAuthTokenEnabledForAllUrls ||
-            metadata.boundAuthTokenWhitelist?.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
-            !metadata.boundAuthTokenExemptlist?.some(item => url.includes(item.apiSite));
+            metadata.boundAuthTokenWhitelist?.some((item) => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
+            !metadata.boundAuthTokenExemptlist?.some((item) => url.includes(item.apiSite));
     }
     constructor({ fetch, headers, cookie, targetId, onSite, keys, baseUrl, } = {}) {
         Object.defineProperty(this, "_fetchFn", {
@@ -283,7 +298,9 @@ class HBAClient {
         }
         if (headers) {
             // @ts-ignore: fine
-            this.headers = headers instanceof Headers ? Object.fromEntries(headers.entries()) : headers;
+            this.headers = headers instanceof Headers
+                ? Object.fromEntries(headers.entries())
+                : headers;
         }
         if (cookie) {
             this.cookie = cookie;
