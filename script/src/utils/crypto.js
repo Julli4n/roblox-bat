@@ -26,11 +26,12 @@ exports.signWithKey = signWithKey;
 async function getCryptoKeyPairFromDB(dbName, dbObjectName, dbObjectChildId) {
     // we want Roblox to create the DB on their end, so we do not want to interfere
     const databases = await indexedDB.databases();
-    if (!databases.some(item => item.name === dbName)) {
+    const database = databases.find(db => db.name === dbName);
+    if (!database) {
         return null;
     }
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(dbName, 1);
+        const request = indexedDB.open(dbName, database.version ?? 1);
         request.onsuccess = () => {
             try {
                 const db = request.result;
