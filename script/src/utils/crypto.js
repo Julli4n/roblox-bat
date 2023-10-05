@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCryptoKeyPairFromDB = exports.signWithKey = exports.arrayBufferToBase64String = exports.hashStringSha256 = void 0;
+exports.getCryptoKeyPairFromDB = exports.doesDatabaseExist = exports.signWithKey = exports.arrayBufferToBase64String = exports.hashStringSha256 = void 0;
 const constants_js_1 = require("./constants.js");
 async function hashStringSha256(str) {
     const uint8 = new TextEncoder().encode(str);
@@ -23,15 +23,40 @@ async function signWithKey(privateKey, data) {
     return arrayBufferToBase64String(bufferResult);
 }
 exports.signWithKey = signWithKey;
+function doesDatabaseExist(dbName) {
+    return new Promise((resolve) => {
+        const db = indexedDB.open(dbName);
+        db.onsuccess = function () {
+            db.result.close();
+            resolve(true);
+        };
+        db.onupgradeneeded = function (evt) {
+            evt.target?.transaction?.abort();
+            resolve(false);
+        };
+    });
+}
+exports.doesDatabaseExist = doesDatabaseExist;
 async function getCryptoKeyPairFromDB(dbName, dbObjectName, dbObjectChildId) {
+    let targetVersion = 1;
     // we want Roblox to create the DB on their end, so we do not want to interfere
-    const databases = await indexedDB.databases();
-    const database = databases.find(db => db.name === dbName);
-    if (!database) {
-        return null;
+    if ("databases" in indexedDB) {
+        const databases = await indexedDB.databases();
+        const database = databases.find((db) => db.name === dbName);
+        if (!database) {
+            return null;
+        }
+        if (database?.version) {
+            targetVersion = database.version;
+        }
+    }
+    else {
+        if (!await doesDatabaseExist(dbName)) {
+            return null;
+        }
     }
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(dbName, database.version ?? 1);
+        const request = indexedDB.open(dbName, targetVersion);
         request.onsuccess = () => {
             try {
                 const db = request.result;
