@@ -30,12 +30,12 @@ export async function signWithKey(privateKey: CryptoKey, data: string): Promise<
 export function doesDatabaseExist(dbName: string) {
     return new Promise((resolve) => {
         const db = indexedDB.open(dbName);
-        db.onsuccess = function () {
+        db.onsuccess = () => {
             db.result.close();
             resolve(true);
         };
 
-        db.onupgradeneeded = function (evt) {
+        db.onupgradeneeded = (evt) => {
             (evt.target as IDBRequest)?.transaction?.abort();
             resolve(false);
         };
