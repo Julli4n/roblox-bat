@@ -30,13 +30,14 @@ export async function signWithKey(privateKey: CryptoKey, data: string): Promise<
 export async function getCryptoKeyPairFromDB(dbName: string, dbObjectName: string, dbObjectChildId: string): Promise<CryptoKeyPair | null> {
     // we want Roblox to create the DB on their end, so we do not want to interfere
     const databases = await indexedDB.databases();
-    if (!databases.some(item => item.name === dbName)) {
+    const database = databases.find(db => db.name === dbName);
+    if (!database) {
         return null;
     }
 
     return new Promise((resolve, reject) => {
         
-        const request = indexedDB.open(dbName, 1);
+        const request = indexedDB.open(dbName, database.version ?? 1);
         request.onsuccess = () => {
             try {
                 const db = request.result;
