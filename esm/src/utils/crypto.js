@@ -20,11 +20,11 @@ export async function signWithKey(privateKey, data) {
 export function doesDatabaseExist(dbName) {
     return new Promise((resolve) => {
         const db = indexedDB.open(dbName);
-        db.onsuccess = function () {
+        db.onsuccess = () => {
             db.result.close();
             resolve(true);
         };
-        db.onupgradeneeded = function (evt) {
+        db.onupgradeneeded = (evt) => {
             evt.target?.transaction?.abort();
             resolve(false);
         };
