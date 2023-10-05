@@ -27,8 +27,14 @@ export async function signWithKey(privateKey: CryptoKey, data: string): Promise<
     return arrayBufferToBase64String(bufferResult);
 }
 
-export function getCryptoKeyPairFromDB(dbName: string, dbObjectName: string, dbObjectChildId: string): Promise<CryptoKeyPair | null> {
+export async function getCryptoKeyPairFromDB(dbName: string, dbObjectName: string, dbObjectChildId: string): Promise<CryptoKeyPair | null> {
+    const databases = await indexedDB.databases();
+    if (!databases.some(item => item.name === dbName)) {
+        return null;
+    }
+
     return new Promise((resolve, reject) => {
+        
         const request = indexedDB.open(dbName, 1);
         request.onsuccess = () => {
             try {
