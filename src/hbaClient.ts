@@ -1,4 +1,12 @@
-import { AUTH_TOKEN_SEPARATOR, FETCH_TOKEN_METADATA_URL, TOKEN_HEADER_NAME, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_REGEX, MATCH_ROBLOX_URL_BASE, decodeEntities } from "./utils/constants.ts";
+import {
+    AUTH_TOKEN_SEPARATOR,
+    decodeEntities,
+    FETCH_TOKEN_METADATA_REGEX,
+    FETCH_TOKEN_METADATA_SELECTOR,
+    FETCH_TOKEN_METADATA_URL,
+    MATCH_ROBLOX_URL_BASE,
+    TOKEN_HEADER_NAME,
+} from "./utils/constants.ts";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.ts";
 import { filterObject } from "./utils/filterObject.ts";
 
@@ -76,12 +84,12 @@ export class HBAClient {
             const headerParams = new Headers(params.headers);
             headerParams.forEach((value, key) => {
                 headers.set(key, value);
-            })
+            });
         }
 
         const init = {
             ...params,
-            headers
+            headers,
         };
         if (this.onSite) {
             // @ts-ignore: just incase ts is annoying
@@ -98,7 +106,10 @@ export class HBAClient {
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    public async generateBaseHeaders(requestUrl: string | URL, body?: unknown): Promise<Record<string, string>> {
+    public async generateBaseHeaders(
+        requestUrl: string | URL,
+        body?: unknown,
+    ): Promise<Record<string, string>> {
         if (!await this.isUrlIncludedInWhitelist(requestUrl)) {
             return {};
         }
@@ -108,8 +119,8 @@ export class HBAClient {
         }
 
         return {
-            [TOKEN_HEADER_NAME]: token
-        }
+            [TOKEN_HEADER_NAME]: token,
+        };
     }
 
     /**
@@ -128,45 +139,71 @@ export class HBAClient {
             let boundAuthTokenExemptlist: TokenMetadata["boundAuthTokenExemptlist"];
             let hbaIndexedDbName: string;
             let hbaIndexedDbObjStoreName: string;
-            if (uncached || !("document" in globalThis) || !document.querySelector(FETCH_TOKEN_METADATA_SELECTOR)) {
-                const match = (await this.fetch(FETCH_TOKEN_METADATA_URL).then(res => res.text())).match(FETCH_TOKEN_METADATA_REGEX);
-                if (!match) {
-                    return null;
-                }
 
-                try {
-                    isSecureAuthenticationIntentEnabled = match[2] === "true";
-                    isBoundAuthTokenEnabledForAllUrls = match[4] === "true";
-                    boundAuthTokenWhitelist = JSON.parse(decodeEntities(match[6]))?.Whitelist?.map((item: {
-                        sampleRate: string;
-                    }) => ({
-                        ...item,
-                        sampleRate: Number(item.sampleRate)
-                    }));
-                    boundAuthTokenExemptlist = JSON.parse(decodeEntities(match[8]))?.Exemptlist;
-                    hbaIndexedDbName = match[10];
-                    hbaIndexedDbObjStoreName = match[12];
-                } catch {
-                    this.cachedTokenMetadata = undefined;
-                    return null;
+            let doc: Document | undefined;
+            const canUseDoc = "DOMParser" in globalThis && "document" in globalThis;
+            if (
+                uncached || !canUseDoc ||
+                !document.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR)
+            ) {
+                const text = await this.fetch(FETCH_TOKEN_METADATA_URL).then((res) => res.text());
+                if (
+                    !canUseDoc
+                ) {
+                    const match = text.match(FETCH_TOKEN_METADATA_REGEX);
+                    if (!match) {
+                        return null;
+                    }
+
+                    try {
+                        isSecureAuthenticationIntentEnabled = match[2] === "true";
+                        isBoundAuthTokenEnabledForAllUrls = match[4] === "true";
+                        boundAuthTokenWhitelist = JSON.parse(decodeEntities(match[6]))?.Whitelist
+                            ?.map((item: {
+                                sampleRate: string;
+                            }) => ({
+                                ...item,
+                                sampleRate: Number(item.sampleRate),
+                            }));
+                        boundAuthTokenExemptlist = JSON.parse(decodeEntities(match[8]))?.Exemptlist;
+                        hbaIndexedDbName = match[10];
+                        hbaIndexedDbObjStoreName = match[12];
+                    } catch {
+                        this.cachedTokenMetadata = undefined;
+                        return null;
+                    }
+                } else {
+                    doc = new DOMParser().parseFromString(text, "text/html");
                 }
             } else {
-                const el = document.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR);
+                doc = document;
+            }
+
+            if (doc) {
+                const el = doc.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR);
                 if (!el) {
                     return null;
                 }
                 try {
-                    isSecureAuthenticationIntentEnabled = el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
-                    isBoundAuthTokenEnabledForAllUrls = el.getAttribute("data-is-bound-auth-token-enabled") === "true";
-                    boundAuthTokenWhitelist = JSON.parse(el.getAttribute("data-bound-auth-token-whitelist")!)?.Whitelist?.map((item: {
+                    isSecureAuthenticationIntentEnabled =
+                        el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
+                    isBoundAuthTokenEnabledForAllUrls =
+                        el.getAttribute("data-is-bound-auth-token-enabled") === "true";
+                    boundAuthTokenWhitelist = JSON.parse(
+                        el.getAttribute("data-bound-auth-token-whitelist")!,
+                    )?.Whitelist?.map((item: {
                         sampleRate: string;
                     }) => ({
                         ...item,
-                        sampleRate: Number(item.sampleRate)
-                    }))
-                    boundAuthTokenExemptlist = JSON.parse(el.getAttribute("data-bound-auth-token-exemptlist")!)?.Exemptlist;
+                        sampleRate: Number(item.sampleRate),
+                    }));
+                    boundAuthTokenExemptlist = JSON.parse(
+                        el.getAttribute("data-bound-auth-token-exemptlist")!,
+                    )?.Exemptlist;
                     hbaIndexedDbName = el.getAttribute("data-hba-indexed-db-name")!;
-                    hbaIndexedDbObjStoreName = el.getAttribute("data-hba-indexed-db-obj-store-name")!;
+                    hbaIndexedDbObjStoreName = el.getAttribute(
+                        "data-hba-indexed-db-obj-store-name",
+                    )!;
                 } catch {
                     this.cachedTokenMetadata = undefined;
                     return null;
@@ -174,12 +211,12 @@ export class HBAClient {
             }
 
             const tokenMetadata = {
-                isSecureAuthenticationIntentEnabled,
-                isBoundAuthTokenEnabledForAllUrls,
-                boundAuthTokenWhitelist,
-                boundAuthTokenExemptlist,
-                hbaIndexedDbName,
-                hbaIndexedDbObjStoreName
+                isSecureAuthenticationIntentEnabled: isSecureAuthenticationIntentEnabled!,
+                isBoundAuthTokenEnabledForAllUrls: isBoundAuthTokenEnabledForAllUrls!,
+                boundAuthTokenWhitelist: boundAuthTokenWhitelist,
+                boundAuthTokenExemptlist: boundAuthTokenExemptlist!,
+                hbaIndexedDbName: hbaIndexedDbName!,
+                hbaIndexedDbObjStoreName: hbaIndexedDbObjStoreName!,
             };
             this.cachedTokenMetadata = tokenMetadata;
 
@@ -212,7 +249,11 @@ export class HBAClient {
             }
 
             try {
-                const pair = await getCryptoKeyPairFromDB(metadata.hbaIndexedDbName, metadata.hbaIndexedDbObjStoreName, this.targetId);
+                const pair = await getCryptoKeyPairFromDB(
+                    metadata.hbaIndexedDbName,
+                    metadata.hbaIndexedDbObjStoreName,
+                    this.targetId,
+                );
                 this.cryptoKeyPair = pair ?? undefined;
 
                 return pair;
@@ -265,15 +306,17 @@ export class HBAClient {
                 if (!targetUrl.href.includes(MATCH_ROBLOX_URL_BASE)) {
                     return false;
                 }
-            } catch {/* empty */ }
+            } catch { /* empty */ }
         }
         const metadata = await this.getTokenMetadata();
 
         return !!metadata && (
             metadata.isBoundAuthTokenEnabledForAllUrls ||
-            metadata.boundAuthTokenWhitelist?.some(item => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))
+            metadata.boundAuthTokenWhitelist?.some((item) =>
+                url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate)
+            )
         ) &&
-            !metadata.boundAuthTokenExemptlist?.some(item => url.includes(item.apiSite))
+            !metadata.boundAuthTokenExemptlist?.some((item) => url.includes(item.apiSite));
     }
 
     public constructor({
@@ -290,7 +333,9 @@ export class HBAClient {
         }
         if (headers) {
             // @ts-ignore: fine
-            this.headers = headers instanceof Headers ? Object.fromEntries(headers.entries()) : headers;
+            this.headers = headers instanceof Headers
+                ? Object.fromEntries(headers.entries())
+                : headers;
         }
 
         if (cookie) {
@@ -316,7 +361,7 @@ export class HBAClient {
         if (targetId) {
             this.targetId = targetId;
         } else if (setCookie) {
-            const btid = setCookie.match(/browserid=(\d+)/i)?.[1]
+            const btid = setCookie.match(/browserid=(\d+)/i)?.[1];
             if (btid) {
                 this.targetId = btid;
             }
