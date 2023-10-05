@@ -21,23 +21,51 @@ export async function signWithKey(privateKey: CryptoKey, data: string): Promise<
     const bufferResult = await crypto.subtle.sign(
         TOKEN_SIGNATURE_ALGORITHM,
         privateKey,
-        new TextEncoder().encode(data).buffer
+        new TextEncoder().encode(data).buffer,
     );
 
     return arrayBufferToBase64String(bufferResult);
 }
 
-export async function getCryptoKeyPairFromDB(dbName: string, dbObjectName: string, dbObjectChildId: string): Promise<CryptoKeyPair | null> {
+export function doesDatabaseExist(dbName: string) {
+    return new Promise((resolve) => {
+        const db = indexedDB.open(dbName);
+        db.onsuccess = function () {
+            db.result.close();
+            resolve(true);
+        };
+
+        db.onupgradeneeded = function (evt) {
+            (evt.target as IDBRequest)?.transaction?.abort();
+            resolve(false);
+        };
+    });
+}
+
+export async function getCryptoKeyPairFromDB(
+    dbName: string,
+    dbObjectName: string,
+    dbObjectChildId: string,
+): Promise<CryptoKeyPair | null> {
+    let targetVersion = 1;
     // we want Roblox to create the DB on their end, so we do not want to interfere
-    const databases = await indexedDB.databases();
-    const database = databases.find(db => db.name === dbName);
-    if (!database) {
-        return null;
+    if ("databases" in indexedDB) {
+        const databases = await indexedDB.databases();
+        const database = databases.find((db) => db.name === dbName);
+        if (!database) {
+            return null;
+        }
+        if (database?.version) {
+            targetVersion = database.version;
+        }
+    } else {
+        if (!await doesDatabaseExist(dbName)) {
+            return null;
+        }
     }
 
     return new Promise((resolve, reject) => {
-        
-        const request = indexedDB.open(dbName, database.version ?? 1);
+        const request = indexedDB.open(dbName, targetVersion);
         request.onsuccess = () => {
             try {
                 const db = request.result;
