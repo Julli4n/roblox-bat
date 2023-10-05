@@ -1,5 +1,5 @@
-import { build } from "https://deno.land/x/dnt@0.38.1/mod.ts";
 import { copy } from "https://deno.land/std@0.201.0/fs/mod.ts";
+import { build } from "https://deno.land/x/dnt@0.38.1/mod.ts";
 
 await build({
     entryPoints: ["./mod.ts"],
@@ -12,23 +12,23 @@ await build({
     package: {
         name: "roblox-bat",
         description: "A Deno/NodeJS module to generate Roblox BAT tokens for extensions",
-        version: "0.1.4",
+        version: "0.1.5",
         homepage: "https://github.com/Julli4n/roblox-bat",
         author: "Julli4n",
         bugs: {
-            url: "https://github.com/Julli4n/roblox-bat/issues"
+            url: "https://github.com/Julli4n/roblox-bat/issues",
         },
         repository: {
             type: "git",
-            url: "git@github.com:Julli4n/roblox-bat.git"
+            url: "git@github.com:Julli4n/roblox-bat.git",
         },
         keywords: [
             "roblox",
-            "api"
+            "api",
         ],
         license: "MIT",
     },
-    typeCheck: false
+    typeCheck: false,
 });
 
 await copy("./README.md", "./npm/README.md");
