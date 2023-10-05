@@ -9,7 +9,7 @@ In the future, Roblox may completely enforce all requests to include it, thus br
 
 ## How it Works
 * On the first request, it will fetch metadata from `https://www.roblox.com/reference/blank` in the `meta[name="hardware-backed-authentication-data"]` element. 
-* Any requests to generate a token will check if the URL is supported, and then grab a private key from the Indexed DB `hbaStore` in the `hbaObjectStore` with the key of the user's browser tracker ID (browserid in RBXEventTrackerV2 key) to sign the request. The final `x-bound-auth-token` key should be formatted like: `timestamp|sha256ofrequestbody|signatureoffirst2`.
+* Any requests to generate a token will check if the URL is supported, and then grab a private key from the Indexed DB `hbaStore` in the `hbaObjectStore` with the key of the user's browser tracker ID (browserid in RBXEventTrackerV2 key) to sign the request. The final `x-bound-auth-token` key should be formatted like: `sha256ofrequestbody|timestamp|signatureoffirst2`.
 * If the URL is supported and it could find a key, `generateBaseHeaders` will return `{"x-bound-auth-token": string}`, otherwise `{}`
 
 
