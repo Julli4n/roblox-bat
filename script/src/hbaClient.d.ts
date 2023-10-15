@@ -42,6 +42,7 @@ export type TokenMetadata = {
     boundAuthTokenExemptlist?: APISiteExemptlistItem[];
     hbaIndexedDbName: string;
     hbaIndexedDbObjStoreName: string;
+    hbaIndexedDbVersion: number;
 };
 /**
  * Hardware-backed authentication client. This handles generating the headers required.
