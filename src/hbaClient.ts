@@ -6,6 +6,7 @@ import {
     FETCH_TOKEN_METADATA_URL,
     MATCH_ROBLOX_URL_BASE,
     TOKEN_HEADER_NAME,
+    DEFAULT_INDEXED_DB_VERSION
 } from "./utils/constants.ts";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.ts";
 import { filterObject } from "./utils/filterObject.ts";
@@ -57,6 +58,7 @@ export type TokenMetadata = {
     boundAuthTokenExemptlist?: APISiteExemptlistItem[];
     hbaIndexedDbName: string;
     hbaIndexedDbObjStoreName: string;
+    hbaIndexedDbVersion: number;
 };
 
 /**
@@ -139,6 +141,8 @@ export class HBAClient {
             let boundAuthTokenExemptlist: TokenMetadata["boundAuthTokenExemptlist"];
             let hbaIndexedDbName: string;
             let hbaIndexedDbObjStoreName: string;
+            let hbaIndexedDbKeyName: string;
+            let hbaIndexedDbVersion: number;
 
             let doc: Document | undefined;
             const canUseDoc = "DOMParser" in globalThis && "document" in globalThis;
@@ -158,16 +162,28 @@ export class HBAClient {
                     try {
                         isSecureAuthenticationIntentEnabled = match[2] === "true";
                         isBoundAuthTokenEnabledForAllUrls = match[4] === "true";
-                        boundAuthTokenWhitelist = JSON.parse(decodeEntities(match[6]))?.Whitelist
-                            ?.map((item: {
-                                sampleRate: string;
-                            }) => ({
-                                ...item,
-                                sampleRate: Number(item.sampleRate),
-                            }));
-                        boundAuthTokenExemptlist = JSON.parse(decodeEntities(match[8]))?.Exemptlist;
+                        try {
+                            boundAuthTokenWhitelist = JSON.parse(decodeEntities(match[6]))
+                                ?.Whitelist
+                                ?.map((item: {
+                                    sampleRate: string;
+                                }) => ({
+                                    ...item,
+                                    sampleRate: Number(item.sampleRate),
+                                }));
+                        } catch {
+                            boundAuthTokenWhitelist = [];
+                        }
+                        try {
+                            boundAuthTokenExemptlist = JSON.parse(decodeEntities(match[8]))
+                                ?.Exemptlist;
+                        } catch {
+                            boundAuthTokenExemptlist = [];
+                        }
                         hbaIndexedDbName = match[10];
                         hbaIndexedDbObjStoreName = match[12];
+                        hbaIndexedDbKeyName = match[14];
+                        hbaIndexedDbVersion = parseInt(match[16]) || DEFAULT_INDEXED_DB_VERSION;
                     } catch {
                         this.cachedTokenMetadata = undefined;
                         return null;
@@ -189,21 +205,31 @@ export class HBAClient {
                         el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
                     isBoundAuthTokenEnabledForAllUrls =
                         el.getAttribute("data-is-bound-auth-token-enabled") === "true";
-                    boundAuthTokenWhitelist = JSON.parse(
-                        el.getAttribute("data-bound-auth-token-whitelist")!,
-                    )?.Whitelist?.map((item: {
-                        sampleRate: string;
-                    }) => ({
-                        ...item,
-                        sampleRate: Number(item.sampleRate),
-                    }));
-                    boundAuthTokenExemptlist = JSON.parse(
-                        el.getAttribute("data-bound-auth-token-exemptlist")!,
-                    )?.Exemptlist;
+                    try {
+                        boundAuthTokenWhitelist = JSON.parse(
+                            el.getAttribute("data-bound-auth-token-whitelist")!,
+                        )?.Whitelist?.map((item: {
+                            sampleRate: string;
+                        }) => ({
+                            ...item,
+                            sampleRate: Number(item.sampleRate),
+                        }));
+                    } catch {
+                        boundAuthTokenWhitelist = [];
+                    }
+                    try {
+                        boundAuthTokenExemptlist = JSON.parse(
+                            el.getAttribute("data-bound-auth-token-exemptlist")!,
+                        )?.Exemptlist;
+                    } catch {
+                        boundAuthTokenExemptlist = [];
+                    }
                     hbaIndexedDbName = el.getAttribute("data-hba-indexed-db-name")!;
                     hbaIndexedDbObjStoreName = el.getAttribute(
                         "data-hba-indexed-db-obj-store-name",
                     )!;
+                    hbaIndexedDbKeyName = el.getAttribute("ata-hba-indexed-db-key-name")!;
+                    hbaIndexedDbVersion = parseInt(el.getAttribute("data-hba-indexed-db-version")!) || DEFAULT_INDEXED_DB_VERSION;
                 } catch {
                     this.cachedTokenMetadata = undefined;
                     return null;
@@ -217,6 +243,8 @@ export class HBAClient {
                 boundAuthTokenExemptlist: boundAuthTokenExemptlist!,
                 hbaIndexedDbName: hbaIndexedDbName!,
                 hbaIndexedDbObjStoreName: hbaIndexedDbObjStoreName!,
+                hbaIndexedDbKeyName: hbaIndexedDbKeyName!,
+                hbaIndexedDbVersion: hbaIndexedDbVersion!
             };
             this.cachedTokenMetadata = tokenMetadata;
 
