@@ -216,7 +216,7 @@ export class HBAClient {
                     hbaIndexedDbObjStoreName = el.getAttribute(
                         "data-hba-indexed-db-obj-store-name",
                     )!;
-                    hbaIndexedDbKeyName = el.getAttribute("ata-hba-indexed-db-key-name")!;
+                    hbaIndexedDbKeyName = el.getAttribute("data-hba-indexed-db-key-name")!;
                     hbaIndexedDbVersion = parseInt(el.getAttribute("data-hba-indexed-db-version")!, 10) || DEFAULT_INDEXED_DB_VERSION;
                 } catch {
                     this.cachedTokenMetadata = undefined;
