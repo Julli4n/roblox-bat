@@ -53,9 +53,6 @@ class HBAClient {
             // @ts-ignore: just incase ts is annoying
             init.credentials = "include";
         }
-        else if (this.cookie) {
-            headers.set("cookie", this.cookie);
-        }
         return (this._fetchFn ?? fetch)(url, init);
     }
     /**
@@ -126,7 +123,7 @@ class HBAClient {
                         hbaIndexedDbName = match[10];
                         hbaIndexedDbObjStoreName = match[12];
                         hbaIndexedDbKeyName = match[14];
-                        hbaIndexedDbVersion = parseInt(match[16]) || constants_js_1.DEFAULT_INDEXED_DB_VERSION;
+                        hbaIndexedDbVersion = parseInt(match[16], 10) || constants_js_1.DEFAULT_INDEXED_DB_VERSION;
                     }
                     catch {
                         this.cachedTokenMetadata = undefined;
@@ -168,7 +165,7 @@ class HBAClient {
                     hbaIndexedDbName = el.getAttribute("data-hba-indexed-db-name");
                     hbaIndexedDbObjStoreName = el.getAttribute("data-hba-indexed-db-obj-store-name");
                     hbaIndexedDbKeyName = el.getAttribute("ata-hba-indexed-db-key-name");
-                    hbaIndexedDbVersion = parseInt(el.getAttribute("data-hba-indexed-db-version")) || constants_js_1.DEFAULT_INDEXED_DB_VERSION;
+                    hbaIndexedDbVersion = parseInt(el.getAttribute("data-hba-indexed-db-version"), 10) || constants_js_1.DEFAULT_INDEXED_DB_VERSION;
                 }
                 catch {
                     this.cachedTokenMetadata = undefined;
@@ -202,7 +199,7 @@ class HBAClient {
         if (!uncached && await this.cryptoKeyPair) {
             return this.cryptoKeyPair;
         }
-        if (!("indexedDB" in dntShim.dntGlobalThis) || !this.targetId) {
+        if (!("indexedDB" in dntShim.dntGlobalThis)) {
             return null;
         }
         const promise = (async () => {
@@ -211,7 +208,7 @@ class HBAClient {
                 return null;
             }
             try {
-                const pair = await (0, crypto_js_1.getCryptoKeyPairFromDB)(metadata.hbaIndexedDbName, metadata.hbaIndexedDbObjStoreName, this.targetId);
+                const pair = await (0, crypto_js_1.getCryptoKeyPairFromDB)(metadata.hbaIndexedDbName, metadata.hbaIndexedDbObjStoreName, metadata.hbaIndexedDbKeyName);
                 this.cryptoKeyPair = pair ?? undefined;
                 return pair;
             }
@@ -268,24 +265,12 @@ class HBAClient {
             metadata.boundAuthTokenWhitelist?.some((item) => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
             !metadata.boundAuthTokenExemptlist?.some((item) => url.includes(item.apiSite));
     }
-    constructor({ fetch, headers, cookie, targetId, onSite, keys, baseUrl, } = {}) {
+    constructor({ fetch, headers, onSite, keys, baseUrl, } = {}) {
         Object.defineProperty(this, "_fetchFn", {
             enumerable: true,
             configurable: true,
             writable: true,
             value: void 0
-        });
-        Object.defineProperty(this, "cookie", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
-        Object.defineProperty(this, "targetId", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: ""
         });
         Object.defineProperty(this, "cachedTokenMetadata", {
             enumerable: true,
@@ -332,9 +317,6 @@ class HBAClient {
                 ? Object.fromEntries(headers.entries())
                 : headers;
         }
-        if (cookie) {
-            this.cookie = cookie;
-        }
         if (baseUrl) {
             this.baseUrl = baseUrl;
         }
@@ -346,16 +328,6 @@ class HBAClient {
         }
         if (keys) {
             this.suppliedCryptoKeyPair = keys;
-        }
-        const setCookie = cookie ?? globalThis?.document?.cookie;
-        if (targetId) {
-            this.targetId = targetId;
-        }
-        else if (setCookie) {
-            const btid = setCookie.match(/browserid=(\d+)/i)?.[1];
-            if (btid) {
-                this.targetId = btid;
-            }
         }
     }
 }

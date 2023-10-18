@@ -8,14 +8,6 @@ export type HBAClientConstProps = {
      */
     headers?: Record<string, unknown> | Headers;
     /**
-     * The request cookie. This would generally just be used for getting the browser tracker id (btid) for the DB key name.
-     */
-    cookie?: string;
-    /**
-     * The target ID for the object store in the indexed DB.
-     */
-    targetId?: string;
-    /**
      * Whether the current context is on the Roblox site, and will use credentials.
      */
     onSite?: boolean;
@@ -42,6 +34,7 @@ export type TokenMetadata = {
     boundAuthTokenExemptlist?: APISiteExemptlistItem[];
     hbaIndexedDbName: string;
     hbaIndexedDbObjStoreName: string;
+    hbaIndexedDbKeyName: string;
     hbaIndexedDbVersion: number;
 };
 /**
@@ -49,8 +42,6 @@ export type TokenMetadata = {
  */
 export declare class HBAClient {
     private readonly _fetchFn?;
-    cookie?: string;
-    targetId: string;
     cachedTokenMetadata: TokenMetadata | Promise<TokenMetadata | null> | undefined;
     headers: Record<string, unknown>;
     cryptoKeyPair: CryptoKeyPair | Promise<CryptoKeyPair | null> | undefined;
@@ -89,5 +80,5 @@ export declare class HBAClient {
      * @param url - The target URL.
      */
     isUrlIncludedInWhitelist(tryUrl: string | URL): Promise<boolean | undefined>;
-    constructor({ fetch, headers, cookie, targetId, onSite, keys, baseUrl, }?: HBAClientConstProps);
+    constructor({ fetch, headers, onSite, keys, baseUrl, }?: HBAClientConstProps);
 }
