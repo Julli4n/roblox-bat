@@ -26,6 +26,7 @@ const hbaClient = new HBAClient({
 // {"x-bound-auth-token": string}
 const headers = await hbaClient.generateBaseHeaders(
     "https://users.roblox.com/v1/users/authenticated",
+    true, // set to false or undefined if not authenticated
 );
 
 await fetch("https://users.roblox.com/v1/users/authenticated", {
@@ -53,6 +54,7 @@ const body = JSON.stringify({
 // {"x-bound-auth-token": string}
 const headers = await hbaClient.generateBaseHeaders(
     "https://catalog.roblox.com/v1/catalog/items/details",
+    true, // set to false or undefined if not authenticated
     body,
 );
 
