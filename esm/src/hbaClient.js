@@ -1,5 +1,5 @@
 import * as dntShim from "../_dnt.shims.js";
-import { AUTH_TOKEN_SEPARATOR, decodeEntities, FETCH_TOKEN_METADATA_REGEX, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, MATCH_ROBLOX_URL_BASE, TOKEN_HEADER_NAME, DEFAULT_INDEXED_DB_VERSION } from "./utils/constants.js";
+import { AUTH_TOKEN_SEPARATOR, decodeEntities, FETCH_TOKEN_METADATA_REGEX, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, MATCH_ROBLOX_URL_BASE, TOKEN_HEADER_NAME, DEFAULT_INDEXED_DB_VERSION, FETCH_AUTHENTICATED_URL, FORCE_BAT_URLS } from "./utils/constants.js";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.js";
 import { filterObject } from "./utils/filterObject.js";
 /**
@@ -19,6 +19,9 @@ export class HBAClient {
                 headers.set(key, value);
             });
         }
+        if (this.cookie) {
+            headers.set("cookie", this.cookie);
+        }
         const init = {
             ...params,
             headers,
@@ -34,8 +37,8 @@ export class HBAClient {
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    async generateBaseHeaders(requestUrl, body) {
-        if (!await this.isUrlIncludedInWhitelist(requestUrl)) {
+    async generateBaseHeaders(requestUrl, includeCredentials, body) {
+        if (!await this.isUrlIncludedInWhitelist(requestUrl, includeCredentials)) {
             return {};
         }
         const token = await this.generateBAT(body);
@@ -45,6 +48,17 @@ export class HBAClient {
         return {
             [TOKEN_HEADER_NAME]: token,
         };
+    }
+    async getIsAuthenticated(uncached) {
+        if (!uncached && typeof (await this.isAuthenticated) == "boolean") {
+            return this.isAuthenticated;
+        }
+        const promise = this.fetch(FETCH_AUTHENTICATED_URL).then(res => {
+            this.isAuthenticated = res.ok;
+            return res.ok;
+        }).catch(() => undefined);
+        this.isAuthenticated = promise;
+        return promise;
     }
     /**
      * Get HBA token metadata.
@@ -220,7 +234,7 @@ export class HBAClient {
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
      */
-    async isUrlIncludedInWhitelist(tryUrl) {
+    async isUrlIncludedInWhitelist(tryUrl, includeCredentials) {
         const url = tryUrl.toString();
         if (!url.toString().includes(MATCH_ROBLOX_URL_BASE)) {
             return false;
@@ -234,12 +248,18 @@ export class HBAClient {
             }
             catch { /* empty */ }
         }
+        if (FORCE_BAT_URLS.some(url2 => url.includes(url2))) {
+            return true;
+        }
+        if ((!includeCredentials || !await this.getIsAuthenticated())) {
+            return false;
+        }
         const metadata = await this.getTokenMetadata();
         return !!metadata && (metadata.isBoundAuthTokenEnabledForAllUrls ||
             metadata.boundAuthTokenWhitelist?.some((item) => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
             !metadata.boundAuthTokenExemptlist?.some((item) => url.includes(item.apiSite));
     }
-    constructor({ fetch, headers, onSite, keys, baseUrl, } = {}) {
+    constructor({ fetch, headers, onSite, keys, baseUrl, cookie, } = {}) {
         Object.defineProperty(this, "_fetchFn", {
             enumerable: true,
             configurable: true,
@@ -282,6 +302,18 @@ export class HBAClient {
             writable: true,
             value: void 0
         });
+        Object.defineProperty(this, "cookie", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
+        Object.defineProperty(this, "isAuthenticated", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
         if (fetch) {
             this._fetchFn = fetch;
         }
@@ -302,6 +334,9 @@ export class HBAClient {
         }
         if (keys) {
             this.suppliedCryptoKeyPair = keys;
+        }
+        if (cookie) {
+            this.cookie = cookie;
         }
     }
 }

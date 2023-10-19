@@ -3,9 +3,13 @@ export const FETCH_TOKEN_URL = "https://apis.roblox.com/hba-service/v1/getServer
 export const FETCH_TOKEN_METADATA_URL = "https://www.roblox.com/reference/blank";
 export const FETCH_TOKEN_METADATA_SELECTOR = 'meta[name="hardware-backed-authentication-data"]';
 export const FETCH_TOKEN_METADATA_REGEX = /name="hardware-backed-authentication-data"(\s|.)+?data-is-secure-authentication-intent-enabled="(.+?)"(\s|.)+?data-is-bound-auth-token-enabled="(.+?)"(\s|.)+?data-bound-auth-token-whitelist="(.+?)"(\s|.)+?data-bound-auth-token-exemptlist="(.+?)"(\s|.)+?data-hba-indexed-db-name="(.+?)"(\s|.)+?data-hba-indexed-db-obj-store-name="(.+?)"(\s|.)+?data-hba-indexed-db-key-name="(.+?)"(\s|.)+?data-hba-indexed-db-version="(.+?)"/;
+export const FETCH_AUTHENTICATED_URL = "https://users.roblox.com/v1/users/authenticated";
 export const AUTH_TOKEN_SEPARATOR = "|";
 export const MATCH_ROBLOX_URL_BASE = ".roblox.com";
 export const DEFAULT_INDEXED_DB_VERSION = 1;
+export const FORCE_BAT_URLS = [
+    "/account-switcher/v1/switch"
+];
 export const TOKEN_SIGNATURE_ALGORITHM = {
     name: "ECDSA",
     hash: { name: "SHA-256" }

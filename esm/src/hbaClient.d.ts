@@ -19,6 +19,10 @@ export type HBAClientConstProps = {
      * The base URL as a string of the client.
      */
     baseUrl?: string;
+    /**
+     * The cookie to use.
+     */
+    cookie?: string;
 };
 export type APISiteWhitelistItem = {
     apiSite: string;
@@ -42,12 +46,14 @@ export type TokenMetadata = {
  */
 export declare class HBAClient {
     private readonly _fetchFn?;
-    cachedTokenMetadata: TokenMetadata | Promise<TokenMetadata | null> | undefined;
+    cachedTokenMetadata?: TokenMetadata | Promise<TokenMetadata | null>;
     headers: Record<string, unknown>;
-    cryptoKeyPair: CryptoKeyPair | Promise<CryptoKeyPair | null> | undefined;
+    cryptoKeyPair?: CryptoKeyPair | Promise<CryptoKeyPair | null>;
     onSite: boolean;
-    suppliedCryptoKeyPair: CryptoKeyPair | undefined;
-    baseUrl: string | undefined;
+    suppliedCryptoKeyPair?: CryptoKeyPair;
+    baseUrl?: string;
+    cookie?: string;
+    isAuthenticated?: Promise<boolean | undefined> | boolean;
     /**
      * General fetch wrapper for the client. Not for general public use.
      * @param url - The target URL
@@ -59,7 +65,8 @@ export declare class HBAClient {
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    generateBaseHeaders(requestUrl: string | URL, body?: unknown): Promise<Record<string, string>>;
+    generateBaseHeaders(requestUrl: string | URL, includeCredentials?: boolean, body?: unknown): Promise<Record<string, string>>;
+    getIsAuthenticated(uncached?: boolean): Promise<boolean | undefined>;
     /**
      * Get HBA token metadata.
      * @param uncached - Whether it should fetch uncached.
@@ -79,6 +86,6 @@ export declare class HBAClient {
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
      */
-    isUrlIncludedInWhitelist(tryUrl: string | URL): Promise<boolean | undefined>;
-    constructor({ fetch, headers, onSite, keys, baseUrl, }?: HBAClientConstProps);
+    isUrlIncludedInWhitelist(tryUrl: string | URL, includeCredentials?: boolean): Promise<boolean | undefined>;
+    constructor({ fetch, headers, onSite, keys, baseUrl, cookie, }?: HBAClientConstProps);
 }

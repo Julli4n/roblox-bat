@@ -45,6 +45,9 @@ class HBAClient {
                 headers.set(key, value);
             });
         }
+        if (this.cookie) {
+            headers.set("cookie", this.cookie);
+        }
         const init = {
             ...params,
             headers,
@@ -60,8 +63,8 @@ class HBAClient {
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    async generateBaseHeaders(requestUrl, body) {
-        if (!await this.isUrlIncludedInWhitelist(requestUrl)) {
+    async generateBaseHeaders(requestUrl, includeCredentials, body) {
+        if (!await this.isUrlIncludedInWhitelist(requestUrl, includeCredentials)) {
             return {};
         }
         const token = await this.generateBAT(body);
@@ -71,6 +74,17 @@ class HBAClient {
         return {
             [constants_js_1.TOKEN_HEADER_NAME]: token,
         };
+    }
+    async getIsAuthenticated(uncached) {
+        if (!uncached && typeof (await this.isAuthenticated) == "boolean") {
+            return this.isAuthenticated;
+        }
+        const promise = this.fetch(constants_js_1.FETCH_AUTHENTICATED_URL).then(res => {
+            this.isAuthenticated = res.ok;
+            return res.ok;
+        }).catch(() => undefined);
+        this.isAuthenticated = promise;
+        return promise;
     }
     /**
      * Get HBA token metadata.
@@ -246,7 +260,7 @@ class HBAClient {
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
      */
-    async isUrlIncludedInWhitelist(tryUrl) {
+    async isUrlIncludedInWhitelist(tryUrl, includeCredentials) {
         const url = tryUrl.toString();
         if (!url.toString().includes(constants_js_1.MATCH_ROBLOX_URL_BASE)) {
             return false;
@@ -260,12 +274,18 @@ class HBAClient {
             }
             catch { /* empty */ }
         }
+        if (constants_js_1.FORCE_BAT_URLS.some(url2 => url.includes(url2))) {
+            return true;
+        }
+        if ((!includeCredentials || !await this.getIsAuthenticated())) {
+            return false;
+        }
         const metadata = await this.getTokenMetadata();
         return !!metadata && (metadata.isBoundAuthTokenEnabledForAllUrls ||
             metadata.boundAuthTokenWhitelist?.some((item) => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
             !metadata.boundAuthTokenExemptlist?.some((item) => url.includes(item.apiSite));
     }
-    constructor({ fetch, headers, onSite, keys, baseUrl, } = {}) {
+    constructor({ fetch, headers, onSite, keys, baseUrl, cookie, } = {}) {
         Object.defineProperty(this, "_fetchFn", {
             enumerable: true,
             configurable: true,
@@ -308,6 +328,18 @@ class HBAClient {
             writable: true,
             value: void 0
         });
+        Object.defineProperty(this, "cookie", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
+        Object.defineProperty(this, "isAuthenticated", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0
+        });
         if (fetch) {
             this._fetchFn = fetch;
         }
@@ -328,6 +360,9 @@ class HBAClient {
         }
         if (keys) {
             this.suppliedCryptoKeyPair = keys;
+        }
+        if (cookie) {
+            this.cookie = cookie;
         }
     }
 }
