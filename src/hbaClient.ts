@@ -152,7 +152,7 @@ export class HBAClient {
             if (
                 uncached || !canUseDoc ||
                 !document.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR) ||
-                !document.querySelector?.(FETCH_USER_DATA_SELECTOR)
+                (!document.querySelector?.(FETCH_USER_DATA_SELECTOR) && document?.readyState === "loading")
             ) {
                 const text = await this.fetch(FETCH_TOKEN_METADATA_URL).then((res) => res.text());
                 if (
