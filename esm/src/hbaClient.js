@@ -71,7 +71,7 @@ export class HBAClient {
             const canUseDoc = "DOMParser" in dntShim.dntGlobalThis && "document" in dntShim.dntGlobalThis;
             if (uncached || !canUseDoc ||
                 !document.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR) ||
-                !document.querySelector?.(FETCH_USER_DATA_SELECTOR)) {
+                (!document.querySelector?.(FETCH_USER_DATA_SELECTOR) && document?.readyState === "loading")) {
                 const text = await this.fetch(FETCH_TOKEN_METADATA_URL).then((res) => res.text());
                 if (!canUseDoc) {
                     const match = text.match(FETCH_TOKEN_METADATA_REGEX);
