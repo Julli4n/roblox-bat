@@ -7,8 +7,9 @@ import {
     MATCH_ROBLOX_URL_BASE,
     TOKEN_HEADER_NAME,
     DEFAULT_INDEXED_DB_VERSION,
-    FETCH_AUTHENTICATED_URL,
-    FORCE_BAT_URLS
+    FORCE_BAT_URLS,
+    FETCH_USER_DATA_SELECTOR,
+    FETCH_USER_DATA_REGEX,
 } from "./utils/constants.ts";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.ts";
 import { filterObject } from "./utils/filterObject.ts";
@@ -58,6 +59,7 @@ export type TokenMetadata = {
     hbaIndexedDbObjStoreName: string;
     hbaIndexedDbKeyName: string;
     hbaIndexedDbVersion: number;
+    isAuthenticated: boolean;
 };
 
 /**
@@ -125,20 +127,6 @@ export class HBAClient {
         };
     }
 
-    public async getIsAuthenticated(uncached?: boolean): Promise<boolean | undefined> {
-        if (!uncached && typeof (await this.isAuthenticated) == "boolean") {
-            return this.isAuthenticated as Promise<boolean>;
-        }
-
-        const promise = this.fetch(FETCH_AUTHENTICATED_URL).then(res => {
-            this.isAuthenticated = res.ok;
-            return res.ok;
-        }).catch(() => undefined);
-
-        this.isAuthenticated = promise;
-        return promise;
-    }
-
     /**
      * Get HBA token metadata.
      * @param uncached - Whether it should fetch uncached.
@@ -157,12 +145,14 @@ export class HBAClient {
             let hbaIndexedDbObjStoreName: string;
             let hbaIndexedDbKeyName: string;
             let hbaIndexedDbVersion: number;
+            let isAuthenticated: boolean;
 
             let doc: Document | undefined;
             const canUseDoc = "DOMParser" in globalThis && "document" in globalThis;
             if (
                 uncached || !canUseDoc ||
-                !document.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR)
+                !document.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR) ||
+                !document.querySelector?.(FETCH_USER_DATA_SELECTOR)
             ) {
                 const text = await this.fetch(FETCH_TOKEN_METADATA_URL).then((res) => res.text());
                 if (
@@ -174,6 +164,7 @@ export class HBAClient {
                     }
 
                     try {
+                        isAuthenticated = FETCH_USER_DATA_REGEX.test(text);
                         isSecureAuthenticationIntentEnabled = match[2] === "true";
                         isBoundAuthTokenEnabledForAllUrls = match[4] === "true";
                         try {
@@ -215,6 +206,7 @@ export class HBAClient {
                     return null;
                 }
                 try {
+                    isAuthenticated = !!doc.querySelector?.(FETCH_USER_DATA_SELECTOR);
                     isSecureAuthenticationIntentEnabled =
                         el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
                     isBoundAuthTokenEnabledForAllUrls =
@@ -258,7 +250,8 @@ export class HBAClient {
                 hbaIndexedDbName: hbaIndexedDbName!,
                 hbaIndexedDbObjStoreName: hbaIndexedDbObjStoreName!,
                 hbaIndexedDbKeyName: hbaIndexedDbKeyName!,
-                hbaIndexedDbVersion: hbaIndexedDbVersion!
+                hbaIndexedDbVersion: hbaIndexedDbVersion!,
+                isAuthenticated: isAuthenticated!,
             };
             this.cachedTokenMetadata = tokenMetadata;
 
@@ -350,14 +343,14 @@ export class HBAClient {
                 }
             } catch { /* empty */ }
         }
-        
+
         if (FORCE_BAT_URLS.some(url2 => url.includes(url2))) {
             return true;
         }
-        if ((!includeCredentials || !await this.getIsAuthenticated())) {
+        const metadata = await this.getTokenMetadata();
+        if ((!includeCredentials || !metadata?.isAuthenticated)) {
             return false;
         }
-        const metadata = await this.getTokenMetadata();
 
         return !!metadata && (
             metadata.isBoundAuthTokenEnabledForAllUrls ||
