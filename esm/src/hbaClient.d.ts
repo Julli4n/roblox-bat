@@ -40,6 +40,7 @@ export type TokenMetadata = {
     hbaIndexedDbObjStoreName: string;
     hbaIndexedDbKeyName: string;
     hbaIndexedDbVersion: number;
+    isAuthenticated: boolean;
 };
 /**
  * Hardware-backed authentication client. This handles generating the headers required.
@@ -66,7 +67,6 @@ export declare class HBAClient {
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
     generateBaseHeaders(requestUrl: string | URL, includeCredentials?: boolean, body?: unknown): Promise<Record<string, string>>;
-    getIsAuthenticated(uncached?: boolean): Promise<boolean | undefined>;
     /**
      * Get HBA token metadata.
      * @param uncached - Whether it should fetch uncached.

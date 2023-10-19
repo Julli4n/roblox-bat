@@ -75,17 +75,6 @@ class HBAClient {
             [constants_js_1.TOKEN_HEADER_NAME]: token,
         };
     }
-    async getIsAuthenticated(uncached) {
-        if (!uncached && typeof (await this.isAuthenticated) == "boolean") {
-            return this.isAuthenticated;
-        }
-        const promise = this.fetch(constants_js_1.FETCH_AUTHENTICATED_URL).then(res => {
-            this.isAuthenticated = res.ok;
-            return res.ok;
-        }).catch(() => undefined);
-        this.isAuthenticated = promise;
-        return promise;
-    }
     /**
      * Get HBA token metadata.
      * @param uncached - Whether it should fetch uncached.
@@ -103,10 +92,12 @@ class HBAClient {
             let hbaIndexedDbObjStoreName;
             let hbaIndexedDbKeyName;
             let hbaIndexedDbVersion;
+            let isAuthenticated;
             let doc;
             const canUseDoc = "DOMParser" in dntShim.dntGlobalThis && "document" in dntShim.dntGlobalThis;
             if (uncached || !canUseDoc ||
-                !document.querySelector?.(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR)) {
+                !document.querySelector?.(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR) ||
+                !document.querySelector?.(constants_js_1.FETCH_USER_DATA_SELECTOR)) {
                 const text = await this.fetch(constants_js_1.FETCH_TOKEN_METADATA_URL).then((res) => res.text());
                 if (!canUseDoc) {
                     const match = text.match(constants_js_1.FETCH_TOKEN_METADATA_REGEX);
@@ -114,6 +105,7 @@ class HBAClient {
                         return null;
                     }
                     try {
+                        isAuthenticated = constants_js_1.FETCH_USER_DATA_REGEX.test(text);
                         isSecureAuthenticationIntentEnabled = match[2] === "true";
                         isBoundAuthTokenEnabledForAllUrls = match[4] === "true";
                         try {
@@ -157,6 +149,7 @@ class HBAClient {
                     return null;
                 }
                 try {
+                    isAuthenticated = !!doc.querySelector?.(constants_js_1.FETCH_USER_DATA_SELECTOR);
                     isSecureAuthenticationIntentEnabled =
                         el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
                     isBoundAuthTokenEnabledForAllUrls =
@@ -194,7 +187,8 @@ class HBAClient {
                 hbaIndexedDbName: hbaIndexedDbName,
                 hbaIndexedDbObjStoreName: hbaIndexedDbObjStoreName,
                 hbaIndexedDbKeyName: hbaIndexedDbKeyName,
-                hbaIndexedDbVersion: hbaIndexedDbVersion
+                hbaIndexedDbVersion: hbaIndexedDbVersion,
+                isAuthenticated: isAuthenticated,
             };
             this.cachedTokenMetadata = tokenMetadata;
             return tokenMetadata;
@@ -277,10 +271,10 @@ class HBAClient {
         if (constants_js_1.FORCE_BAT_URLS.some(url2 => url.includes(url2))) {
             return true;
         }
-        if ((!includeCredentials || !await this.getIsAuthenticated())) {
+        const metadata = await this.getTokenMetadata();
+        if ((!includeCredentials || !metadata?.isAuthenticated)) {
             return false;
         }
-        const metadata = await this.getTokenMetadata();
         return !!metadata && (metadata.isBoundAuthTokenEnabledForAllUrls ||
             metadata.boundAuthTokenWhitelist?.some((item) => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
             !metadata.boundAuthTokenExemptlist?.some((item) => url.includes(item.apiSite));

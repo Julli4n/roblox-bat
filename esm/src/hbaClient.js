@@ -1,5 +1,5 @@
 import * as dntShim from "../_dnt.shims.js";
-import { AUTH_TOKEN_SEPARATOR, decodeEntities, FETCH_TOKEN_METADATA_REGEX, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, MATCH_ROBLOX_URL_BASE, TOKEN_HEADER_NAME, DEFAULT_INDEXED_DB_VERSION, FETCH_AUTHENTICATED_URL, FORCE_BAT_URLS } from "./utils/constants.js";
+import { AUTH_TOKEN_SEPARATOR, decodeEntities, FETCH_TOKEN_METADATA_REGEX, FETCH_TOKEN_METADATA_SELECTOR, FETCH_TOKEN_METADATA_URL, MATCH_ROBLOX_URL_BASE, TOKEN_HEADER_NAME, DEFAULT_INDEXED_DB_VERSION, FORCE_BAT_URLS, FETCH_USER_DATA_SELECTOR, FETCH_USER_DATA_REGEX, } from "./utils/constants.js";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.js";
 import { filterObject } from "./utils/filterObject.js";
 /**
@@ -49,17 +49,6 @@ export class HBAClient {
             [TOKEN_HEADER_NAME]: token,
         };
     }
-    async getIsAuthenticated(uncached) {
-        if (!uncached && typeof (await this.isAuthenticated) == "boolean") {
-            return this.isAuthenticated;
-        }
-        const promise = this.fetch(FETCH_AUTHENTICATED_URL).then(res => {
-            this.isAuthenticated = res.ok;
-            return res.ok;
-        }).catch(() => undefined);
-        this.isAuthenticated = promise;
-        return promise;
-    }
     /**
      * Get HBA token metadata.
      * @param uncached - Whether it should fetch uncached.
@@ -77,10 +66,12 @@ export class HBAClient {
             let hbaIndexedDbObjStoreName;
             let hbaIndexedDbKeyName;
             let hbaIndexedDbVersion;
+            let isAuthenticated;
             let doc;
             const canUseDoc = "DOMParser" in dntShim.dntGlobalThis && "document" in dntShim.dntGlobalThis;
             if (uncached || !canUseDoc ||
-                !document.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR)) {
+                !document.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR) ||
+                !document.querySelector?.(FETCH_USER_DATA_SELECTOR)) {
                 const text = await this.fetch(FETCH_TOKEN_METADATA_URL).then((res) => res.text());
                 if (!canUseDoc) {
                     const match = text.match(FETCH_TOKEN_METADATA_REGEX);
@@ -88,6 +79,7 @@ export class HBAClient {
                         return null;
                     }
                     try {
+                        isAuthenticated = FETCH_USER_DATA_REGEX.test(text);
                         isSecureAuthenticationIntentEnabled = match[2] === "true";
                         isBoundAuthTokenEnabledForAllUrls = match[4] === "true";
                         try {
@@ -131,6 +123,7 @@ export class HBAClient {
                     return null;
                 }
                 try {
+                    isAuthenticated = !!doc.querySelector?.(FETCH_USER_DATA_SELECTOR);
                     isSecureAuthenticationIntentEnabled =
                         el.getAttribute("data-is-secure-authentication-intent-enabled") === "true";
                     isBoundAuthTokenEnabledForAllUrls =
@@ -168,7 +161,8 @@ export class HBAClient {
                 hbaIndexedDbName: hbaIndexedDbName,
                 hbaIndexedDbObjStoreName: hbaIndexedDbObjStoreName,
                 hbaIndexedDbKeyName: hbaIndexedDbKeyName,
-                hbaIndexedDbVersion: hbaIndexedDbVersion
+                hbaIndexedDbVersion: hbaIndexedDbVersion,
+                isAuthenticated: isAuthenticated,
             };
             this.cachedTokenMetadata = tokenMetadata;
             return tokenMetadata;
@@ -251,10 +245,10 @@ export class HBAClient {
         if (FORCE_BAT_URLS.some(url2 => url.includes(url2))) {
             return true;
         }
-        if ((!includeCredentials || !await this.getIsAuthenticated())) {
+        const metadata = await this.getTokenMetadata();
+        if ((!includeCredentials || !metadata?.isAuthenticated)) {
             return false;
         }
-        const metadata = await this.getTokenMetadata();
         return !!metadata && (metadata.isBoundAuthTokenEnabledForAllUrls ||
             metadata.boundAuthTokenWhitelist?.some((item) => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
             !metadata.boundAuthTokenExemptlist?.some((item) => url.includes(item.apiSite));
