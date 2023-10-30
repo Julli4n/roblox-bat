@@ -348,7 +348,7 @@ export class HBAClient {
             return true;
         }
         const metadata = await this.getTokenMetadata();
-        if ((!includeCredentials || !metadata?.isAuthenticated)) {
+        if ((!includeCredentials || !(metadata?.isAuthenticated || this.isAuthenticated))) {
             return false;
         }
 
