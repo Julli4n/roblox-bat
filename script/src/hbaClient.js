@@ -53,7 +53,7 @@ class HBAClient {
             headers,
         };
         if (this.onSite) {
-            // @ts-ignoe: just incase ts is annoying
+            // @ts-ignore: just incase ts is annoying
             init.credentials = "include";
         }
         return (this._fetchFn ?? fetch)(url, init);
