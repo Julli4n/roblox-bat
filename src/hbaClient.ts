@@ -104,7 +104,7 @@ export class HBAClient {
      * @param url - The target URL
      * @param params - The request parameters
      */
-    public fetch(url: string, params?: RequestInit) {
+    public fetch(url: string, params?: RequestInit): Promise<Response> {
         const headers = new Headers(filterObject(this.headers) as Record<string, string>);
         if (params?.headers) {
             const headerParams = new Headers(params.headers);
