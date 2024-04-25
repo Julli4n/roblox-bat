@@ -358,7 +358,10 @@ export class HBAClient {
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
      */
-    public async isUrlIncludedInWhitelist(tryUrl: string | URL, includeCredentials?: boolean) {
+    public async isUrlIncludedInWhitelist(
+        tryUrl: string | URL,
+        includeCredentials?: boolean,
+    ): Promise<boolean> {
         const url = tryUrl.toString();
         if (!url.toString().includes(this.urls.matchRobloxBaseUrl)) {
             return false;
@@ -382,7 +385,7 @@ export class HBAClient {
 
         return !!metadata && (
             metadata.isBoundAuthTokenEnabledForAllUrls ||
-            metadata.boundAuthTokenWhitelist?.some((item) =>
+            !!metadata.boundAuthTokenWhitelist?.some((item) =>
                 url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate)
             )
         ) &&

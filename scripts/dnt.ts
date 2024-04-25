@@ -1,5 +1,5 @@
-import { copy } from "https://deno.land/std@0.201.0/fs/mod.ts";
-import { build } from "https://deno.land/x/dnt@0.38.1/mod.ts";
+import { copy } from "jsr:@std/fs@0.223.0";
+import { build } from "jsr:@deno/dnt@0.41.1";
 
 await build({
     entryPoints: ["./mod.ts"],
@@ -12,7 +12,7 @@ await build({
     package: {
         name: "roblox-bat",
         description: "A Deno/NodeJS module to generate Roblox BAT tokens for extensions",
-        version: "0.3.3",
+        version: "0.4.0",
         homepage: "https://github.com/Julli4n/roblox-bat",
         author: "Julli4n",
         bugs: {

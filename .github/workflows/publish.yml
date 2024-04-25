@@ -1,16 +1,19 @@
-name: Release/transpile Node
+name: Publish on JSR/NPM
 
 on:
   push:
     branches: [main]
   release:
-    branches: [main]
     types: [created]
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Setup Repo
@@ -25,7 +28,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
-          node-version: '16.x'
+          node-version: '21.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Deno Lint
@@ -53,3 +56,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: cd npm && npm publish --access public
+
+      - name: Publish on JSR
+        if: github.event_name == 'release' && github.repository == 'Julli4n/roblox-bat'
+        run: deno publish
