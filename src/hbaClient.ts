@@ -1,26 +1,26 @@
 import {
     AUTH_TOKEN_SEPARATOR,
     decodeEntities,
+    DEFAULT_FETCH_TOKEN_METADATA_URL,
+    DEFAULT_FORCE_BAT_URLS,
+    DEFAULT_INDEXED_DB_VERSION,
+    DEFAULT_MATCH_ROBLOX_URL_BASE,
     FETCH_TOKEN_METADATA_REGEX,
     FETCH_TOKEN_METADATA_SELECTOR,
-    FETCH_TOKEN_METADATA_URL,
-    MATCH_ROBLOX_URL_BASE,
-    TOKEN_HEADER_NAME,
-    DEFAULT_INDEXED_DB_VERSION,
-    FORCE_BAT_URLS,
-    FETCH_USER_DATA_SELECTOR,
     FETCH_USER_DATA_REGEX,
+    FETCH_USER_DATA_SELECTOR,
+    TOKEN_HEADER_NAME,
 } from "./utils/constants.ts";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.ts";
 import { filterObject } from "./utils/filterObject.ts";
 
 export type HBAClientConstProps = {
     /**
-     * The fetch to be wrapped.
+     * The fetch to be used when fetching metadata.
      */
     fetch?: (url: string, params?: RequestInit) => Promise<Response>;
     /**
-     * Base request headers.
+     * Base request headers for metadata requests.
      */
     headers?: Record<string, unknown> | Headers;
     /**
@@ -28,17 +28,17 @@ export type HBAClientConstProps = {
      */
     onSite?: boolean;
     /**
-     * A supplied CryptoKeyPair.
+     * A supplied CryptoKeyPair that will be used to generate tokens. Must be ECDSA P-256.
      */
     keys?: CryptoKeyPair;
     /**
-     * The base URL as a string of the client.
-     */
-    baseUrl?: string;
-    /**
-     * The cookie to use.
+     * The cookie to use for metadata requests.
      */
     cookie?: string;
+    /**
+     * HBA url configs.
+     */
+    urls?: Partial<HBAUrlConfig>;
 };
 
 export type APISiteWhitelistItem = {
@@ -62,6 +62,25 @@ export type TokenMetadata = {
     isAuthenticated: boolean;
 };
 
+export type HBAUrlConfig = {
+    /**
+     * The URL to fetch token metadata from.
+     */
+    fetchTokenMetadataUrl: string;
+    /**
+     * A string pattern to check against to see whether it should generate a token.
+     */
+    matchRobloxBaseUrl: string;
+    /**
+     * String pattern paths that will be checked against for forced token generation.
+     */
+    forceBATUrls: string[];
+    /**
+     * Current URL context.
+     */
+    currentUrl?: string;
+};
+
 /**
  * Hardware-backed authentication client. This handles generating the headers required.
  */
@@ -72,9 +91,13 @@ export class HBAClient {
     public cryptoKeyPair?: CryptoKeyPair | Promise<CryptoKeyPair | null>;
     public onSite = false;
     public suppliedCryptoKeyPair?: CryptoKeyPair;
-    public baseUrl?: string;
     public cookie?: string;
     public isAuthenticated?: Promise<boolean | undefined> | boolean;
+    public urls: HBAUrlConfig = {
+        fetchTokenMetadataUrl: DEFAULT_FETCH_TOKEN_METADATA_URL,
+        matchRobloxBaseUrl: DEFAULT_MATCH_ROBLOX_URL_BASE,
+        forceBATUrls: DEFAULT_FORCE_BAT_URLS,
+    };
 
     /**
      * General fetch wrapper for the client. Not for general public use.
@@ -85,9 +108,9 @@ export class HBAClient {
         const headers = new Headers(filterObject(this.headers) as Record<string, string>);
         if (params?.headers) {
             const headerParams = new Headers(params.headers);
-            headerParams.forEach((value, key) => {
+            for (const [key, value] of headerParams) {
                 headers.set(key, value);
-            });
+            }
         }
         if (this.cookie) {
             headers.set("cookie", this.cookie);
@@ -98,7 +121,7 @@ export class HBAClient {
             headers,
         };
         if (this.onSite) {
-            // @ts-ignore: just incase ts is annoying
+            // @ts-ignoe: just incase ts is annoying
             init.credentials = "include";
         }
         return (this._fetchFn ?? fetch)(url, init);
@@ -152,9 +175,12 @@ export class HBAClient {
             if (
                 uncached || !canUseDoc ||
                 !document.querySelector?.(FETCH_TOKEN_METADATA_SELECTOR) ||
-                (!document.querySelector?.(FETCH_USER_DATA_SELECTOR) && document?.readyState === "loading")
+                (!document.querySelector?.(FETCH_USER_DATA_SELECTOR) &&
+                    document?.readyState === "loading")
             ) {
-                const text = await this.fetch(FETCH_TOKEN_METADATA_URL).then((res) => res.text());
+                const text = await this.fetch(this.urls.fetchTokenMetadataUrl).then((res) =>
+                    res.text()
+                );
                 if (
                     !canUseDoc
                 ) {
@@ -235,7 +261,9 @@ export class HBAClient {
                         "data-hba-indexed-db-obj-store-name",
                     )!;
                     hbaIndexedDbKeyName = el.getAttribute("data-hba-indexed-db-key-name")!;
-                    hbaIndexedDbVersion = parseInt(el.getAttribute("data-hba-indexed-db-version")!, 10) || DEFAULT_INDEXED_DB_VERSION;
+                    hbaIndexedDbVersion =
+                        parseInt(el.getAttribute("data-hba-indexed-db-version")!, 10) ||
+                        DEFAULT_INDEXED_DB_VERSION;
                 } catch {
                     this.cachedTokenMetadata = undefined;
                     return null;
@@ -332,19 +360,19 @@ export class HBAClient {
      */
     public async isUrlIncludedInWhitelist(tryUrl: string | URL, includeCredentials?: boolean) {
         const url = tryUrl.toString();
-        if (!url.toString().includes(MATCH_ROBLOX_URL_BASE)) {
+        if (!url.toString().includes(this.urls.matchRobloxBaseUrl)) {
             return false;
         }
-        if (this.onSite && this.baseUrl) {
+        if (this.onSite && this.urls.currentUrl) {
             try {
-                const targetUrl = new URL(url, this.baseUrl);
-                if (!targetUrl.href.includes(MATCH_ROBLOX_URL_BASE)) {
+                const targetUrl = new URL(url, this.urls.currentUrl);
+                if (!targetUrl.href.includes(this.urls.matchRobloxBaseUrl)) {
                     return false;
                 }
             } catch { /* empty */ }
         }
 
-        if (FORCE_BAT_URLS.some(url2 => url.includes(url2))) {
+        if (this.urls.forceBATUrls.some((url2) => url.includes(url2))) {
             return true;
         }
         const metadata = await this.getTokenMetadata();
@@ -366,7 +394,7 @@ export class HBAClient {
         headers,
         onSite,
         keys,
-        baseUrl,
+        urls,
         cookie,
     }: HBAClientConstProps = {}) {
         if (fetch) {
@@ -379,14 +407,17 @@ export class HBAClient {
                 : headers;
         }
 
-        if (baseUrl) {
-            this.baseUrl = baseUrl;
+        if (urls) {
+            for (const key in urls) {
+                // @ts-ignore: Fine. Type assertions are annoying.
+                this.urls[key] = urls[key];
+            }
         }
 
         if (onSite) {
             this.onSite = onSite;
-            if (globalThis?.location?.href && !baseUrl) {
-                this.baseUrl = globalThis.location.href;
+            if (globalThis?.location?.href && !urls?.currentUrl) {
+                this.urls.currentUrl = globalThis.location.href;
             }
         }
 
