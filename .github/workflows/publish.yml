@@ -28,11 +28,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '21.x'
+          node-version: 'latest'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Deno Lint
         run: deno lint
+
+      - name: Publish on JSR
+        if: github.event_name == 'release' && github.repository == 'Julli4n/roblox-bat'
+        run: deno publish
         
       - name: Build npm folder
         run: deno run -A --unstable ./scripts/dnt.ts
@@ -56,7 +60,3 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: cd npm && npm publish --access public
-
-      - name: Publish on JSR
-        if: github.event_name == 'release' && github.repository == 'Julli4n/roblox-bat'
-        run: deno publish
