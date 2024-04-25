@@ -1,10 +1,10 @@
 export type HBAClientConstProps = {
     /**
-     * The fetch to be wrapped.
+     * The fetch to be used when fetching metadata.
      */
     fetch?: (url: string, params?: RequestInit) => Promise<Response>;
     /**
-     * Base request headers.
+     * Base request headers for metadata requests.
      */
     headers?: Record<string, unknown> | Headers;
     /**
@@ -12,17 +12,17 @@ export type HBAClientConstProps = {
      */
     onSite?: boolean;
     /**
-     * A supplied CryptoKeyPair.
+     * A supplied CryptoKeyPair that will be used to generate tokens. Must be ECDSA P-256.
      */
     keys?: CryptoKeyPair;
     /**
-     * The base URL as a string of the client.
-     */
-    baseUrl?: string;
-    /**
-     * The cookie to use.
+     * The cookie to use for metadata requests.
      */
     cookie?: string;
+    /**
+     * HBA url configs.
+     */
+    urls?: Partial<HBAUrlConfig>;
 };
 export type APISiteWhitelistItem = {
     apiSite: string;
@@ -42,6 +42,24 @@ export type TokenMetadata = {
     hbaIndexedDbVersion: number;
     isAuthenticated: boolean;
 };
+export type HBAUrlConfig = {
+    /**
+     * The URL to fetch token metadata from.
+     */
+    fetchTokenMetadataUrl: string;
+    /**
+     * A string pattern to check against to see whether it should generate a token.
+     */
+    matchRobloxBaseUrl: string;
+    /**
+     * String pattern paths that will be checked against for forced token generation.
+     */
+    forceBATUrls: string[];
+    /**
+     * Current URL context.
+     */
+    currentUrl?: string;
+};
 /**
  * Hardware-backed authentication client. This handles generating the headers required.
  */
@@ -52,9 +70,9 @@ export declare class HBAClient {
     cryptoKeyPair?: CryptoKeyPair | Promise<CryptoKeyPair | null>;
     onSite: boolean;
     suppliedCryptoKeyPair?: CryptoKeyPair;
-    baseUrl?: string;
     cookie?: string;
     isAuthenticated?: Promise<boolean | undefined> | boolean;
+    urls: HBAUrlConfig;
     /**
      * General fetch wrapper for the client. Not for general public use.
      * @param url - The target URL
@@ -86,6 +104,6 @@ export declare class HBAClient {
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
      */
-    isUrlIncludedInWhitelist(tryUrl: string | URL, includeCredentials?: boolean): Promise<boolean | undefined>;
-    constructor({ fetch, headers, onSite, keys, baseUrl, cookie, }?: HBAClientConstProps);
+    isUrlIncludedInWhitelist(tryUrl: string | URL, includeCredentials?: boolean): Promise<boolean>;
+    constructor({ fetch, headers, onSite, keys, urls, cookie, }?: HBAClientConstProps);
 }

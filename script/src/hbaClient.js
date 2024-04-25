@@ -41,9 +41,9 @@ class HBAClient {
         const headers = new Headers((0, filterObject_js_1.filterObject)(this.headers));
         if (params?.headers) {
             const headerParams = new Headers(params.headers);
-            headerParams.forEach((value, key) => {
+            for (const [key, value] of headerParams) {
                 headers.set(key, value);
-            });
+            }
         }
         if (this.cookie) {
             headers.set("cookie", this.cookie);
@@ -53,7 +53,7 @@ class HBAClient {
             headers,
         };
         if (this.onSite) {
-            // @ts-ignore: just incase ts is annoying
+            // @ts-ignoe: just incase ts is annoying
             init.credentials = "include";
         }
         return (this._fetchFn ?? fetch)(url, init);
@@ -97,8 +97,9 @@ class HBAClient {
             const canUseDoc = "DOMParser" in dntShim.dntGlobalThis && "document" in dntShim.dntGlobalThis;
             if (uncached || !canUseDoc ||
                 !document.querySelector?.(constants_js_1.FETCH_TOKEN_METADATA_SELECTOR) ||
-                (!document.querySelector?.(constants_js_1.FETCH_USER_DATA_SELECTOR) && document?.readyState === "loading")) {
-                const text = await this.fetch(constants_js_1.FETCH_TOKEN_METADATA_URL).then((res) => res.text());
+                (!document.querySelector?.(constants_js_1.FETCH_USER_DATA_SELECTOR) &&
+                    document?.readyState === "loading")) {
+                const text = await this.fetch(this.urls.fetchTokenMetadataUrl).then((res) => res.text());
                 if (!canUseDoc) {
                     const match = text.match(constants_js_1.FETCH_TOKEN_METADATA_REGEX);
                     if (!match) {
@@ -172,7 +173,9 @@ class HBAClient {
                     hbaIndexedDbName = el.getAttribute("data-hba-indexed-db-name");
                     hbaIndexedDbObjStoreName = el.getAttribute("data-hba-indexed-db-obj-store-name");
                     hbaIndexedDbKeyName = el.getAttribute("data-hba-indexed-db-key-name");
-                    hbaIndexedDbVersion = parseInt(el.getAttribute("data-hba-indexed-db-version"), 10) || constants_js_1.DEFAULT_INDEXED_DB_VERSION;
+                    hbaIndexedDbVersion =
+                        parseInt(el.getAttribute("data-hba-indexed-db-version"), 10) ||
+                            constants_js_1.DEFAULT_INDEXED_DB_VERSION;
                 }
                 catch {
                     this.cachedTokenMetadata = undefined;
@@ -256,19 +259,19 @@ class HBAClient {
      */
     async isUrlIncludedInWhitelist(tryUrl, includeCredentials) {
         const url = tryUrl.toString();
-        if (!url.toString().includes(constants_js_1.MATCH_ROBLOX_URL_BASE)) {
+        if (!url.toString().includes(this.urls.matchRobloxBaseUrl)) {
             return false;
         }
-        if (this.onSite && this.baseUrl) {
+        if (this.onSite && this.urls.currentUrl) {
             try {
-                const targetUrl = new URL(url, this.baseUrl);
-                if (!targetUrl.href.includes(constants_js_1.MATCH_ROBLOX_URL_BASE)) {
+                const targetUrl = new URL(url, this.urls.currentUrl);
+                if (!targetUrl.href.includes(this.urls.matchRobloxBaseUrl)) {
                     return false;
                 }
             }
             catch { /* empty */ }
         }
-        if (constants_js_1.FORCE_BAT_URLS.some(url2 => url.includes(url2))) {
+        if (this.urls.forceBATUrls.some((url2) => url.includes(url2))) {
             return true;
         }
         const metadata = await this.getTokenMetadata();
@@ -276,10 +279,10 @@ class HBAClient {
             return false;
         }
         return !!metadata && (metadata.isBoundAuthTokenEnabledForAllUrls ||
-            metadata.boundAuthTokenWhitelist?.some((item) => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
+            !!metadata.boundAuthTokenWhitelist?.some((item) => url.includes(item.apiSite) && (Math.floor(Math.random() * 100) < item.sampleRate))) &&
             !metadata.boundAuthTokenExemptlist?.some((item) => url.includes(item.apiSite));
     }
-    constructor({ fetch, headers, onSite, keys, baseUrl, cookie, } = {}) {
+    constructor({ fetch, headers, onSite, keys, urls, cookie, } = {}) {
         Object.defineProperty(this, "_fetchFn", {
             enumerable: true,
             configurable: true,
@@ -316,12 +319,6 @@ class HBAClient {
             writable: true,
             value: void 0
         });
-        Object.defineProperty(this, "baseUrl", {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: void 0
-        });
         Object.defineProperty(this, "cookie", {
             enumerable: true,
             configurable: true,
@@ -334,6 +331,16 @@ class HBAClient {
             writable: true,
             value: void 0
         });
+        Object.defineProperty(this, "urls", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: {
+                fetchTokenMetadataUrl: constants_js_1.DEFAULT_FETCH_TOKEN_METADATA_URL,
+                matchRobloxBaseUrl: constants_js_1.DEFAULT_MATCH_ROBLOX_URL_BASE,
+                forceBATUrls: constants_js_1.DEFAULT_FORCE_BAT_URLS,
+            }
+        });
         if (fetch) {
             this._fetchFn = fetch;
         }
@@ -343,13 +350,16 @@ class HBAClient {
                 ? Object.fromEntries(headers.entries())
                 : headers;
         }
-        if (baseUrl) {
-            this.baseUrl = baseUrl;
+        if (urls) {
+            for (const key in urls) {
+                // @ts-ignore: Fine. Type assertions are annoying.
+                this.urls[key] = urls[key];
+            }
         }
         if (onSite) {
             this.onSite = onSite;
-            if (globalThis?.location?.href && !baseUrl) {
-                this.baseUrl = globalThis.location.href;
+            if (globalThis?.location?.href && !urls?.currentUrl) {
+                this.urls.currentUrl = globalThis.location.href;
             }
         }
         if (keys) {

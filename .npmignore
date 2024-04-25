@@ -1,4 +1,4 @@
-src/
-test_runner.js
+/src/
+/test_runner.js
 yarn.lock
 pnpm-lock.yaml
