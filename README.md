@@ -23,7 +23,7 @@ is not feasible, especially when Open Cloud development is slow and extremely re
 - Any requests to generate a token will check if the URL is supported, and then grab a private key
   from the Indexed DB `hbaStore` in the `hbaObjectStore` with the key `hba_keys`. The final
   `x-bound-auth-token` key should be formatted like:
-  `sha256ofrequestbody|timestamp|signatureoffirst2`.
+  `sha256ofrequestbody|timestamp|url|method|signatureofelementsbefore`.
 - If the URL is supported and it could find a key, `generateBaseHeaders` will return
   `{"x-bound-auth-token": string}`, otherwise `{}`
 
@@ -68,6 +68,7 @@ const hbaClient = new HBAClient({
 // {"x-bound-auth-token": string}
 const headers = await hbaClient.generateBaseHeaders(
     "https://users.roblox.com/v1/users/authenticated",
+    "GET",
     true, // set to false or undefined if not authenticated
 );
 
@@ -97,6 +98,7 @@ const body = JSON.stringify({
 // {"x-bound-auth-token": string}
 const headers = await hbaClient.generateBaseHeaders(
     "https://catalog.roblox.com/v1/catalog/items/details",
+    "POST",
     true, // set to false or undefined if not authenticated
     body,
 );

@@ -134,13 +134,14 @@ export class HBAClient {
      */
     public async generateBaseHeaders(
         requestUrl: string | URL,
+        requestMethod: string,
         includeCredentials?: boolean,
         body?: unknown,
     ): Promise<Record<string, string>> {
         if (!await this.isUrlIncludedInWhitelist(requestUrl, includeCredentials)) {
             return {};
         }
-        const token = await this.generateBAT(body);
+        const token = await this.generateBAT(requestUrl.toString(), requestMethod, body);
         if (!token) {
             return {};
         }
@@ -334,7 +335,11 @@ export class HBAClient {
      * Generate the bound auth token given a body.
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    public async generateBAT(body?: unknown): Promise<string | null> {
+    public async generateBAT(
+        requestUrl: string,
+        requestMethod: string,
+        body?: unknown,
+    ): Promise<string | null> {
         const pair = await this.getCryptoKeyPair();
         if (!pair?.privateKey) {
             return null;
@@ -348,7 +353,9 @@ export class HBAClient {
         }
 
         const hashedBody = await hashStringSha256(strBody);
-        const payloadToSign = [hashedBody, timestamp].join(AUTH_TOKEN_SEPARATOR);
+        const payloadToSign = [hashedBody, timestamp, requestUrl, requestMethod.toUpperCase()].join(
+            AUTH_TOKEN_SEPARATOR,
+        );
         const signature = await signWithKey(pair.privateKey, payloadToSign);
 
         return [hashedBody, timestamp, signature].join(AUTH_TOKEN_SEPARATOR);

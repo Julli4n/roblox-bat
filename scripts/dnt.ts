@@ -12,7 +12,7 @@ await build({
     package: {
         name: "roblox-bat",
         description: "A Deno/NodeJS module to generate Roblox BAT tokens for extensions",
-        version: "0.4.0",
+        version: "0.5.0",
         homepage: "https://github.com/Julli4n/roblox-bat",
         author: "Julli4n",
         bugs: {
