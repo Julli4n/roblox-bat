@@ -1,5 +1,6 @@
 import {
     AUTH_TOKEN_SEPARATOR,
+    BAT_SIGNATURE_VERSION,
     decodeEntities,
     DEFAULT_FETCH_TOKEN_METADATA_URL,
     DEFAULT_FORCE_BAT_URLS,
@@ -130,6 +131,7 @@ export class HBAClient {
     /**
      * Generate the base headers required, it may be empty or only include `x-bound-auth-token`
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
+     * @param requestMethod  - The target request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
     public async generateBaseHeaders(
@@ -333,10 +335,12 @@ export class HBAClient {
 
     /**
      * Generate the bound auth token given a body.
+     * @param requestUrl - The request URL
+     * @param requestMethod  - The request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
     public async generateBAT(
-        requestUrl: string,
+        requestUrl: string | URL,
         requestMethod: string,
         body?: unknown,
     ): Promise<string | null> {
@@ -353,12 +357,19 @@ export class HBAClient {
         }
 
         const hashedBody = await hashStringSha256(strBody);
-        const payloadToSign = [hashedBody, timestamp, requestUrl, requestMethod.toUpperCase()].join(
+        const payloadToSign = [
+            hashedBody,
+            timestamp,
+            requestUrl.toString(),
+            requestMethod.toUpperCase(),
+        ].join(
             AUTH_TOKEN_SEPARATOR,
         );
         const signature = await signWithKey(pair.privateKey, payloadToSign);
 
-        return [hashedBody, timestamp, signature].join(AUTH_TOKEN_SEPARATOR);
+        return [BAT_SIGNATURE_VERSION, hashedBody, timestamp, signature].join(
+            AUTH_TOKEN_SEPARATOR,
+        );
     }
 
     /**
