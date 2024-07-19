@@ -82,9 +82,10 @@ export declare class HBAClient {
     /**
      * Generate the base headers required, it may be empty or only include `x-bound-auth-token`
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
+     * @param requestMethod  - The target request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    generateBaseHeaders(requestUrl: string | URL, includeCredentials?: boolean, body?: unknown): Promise<Record<string, string>>;
+    generateBaseHeaders(requestUrl: string | URL, requestMethod: string, includeCredentials?: boolean, body?: unknown): Promise<Record<string, string>>;
     /**
      * Get HBA token metadata.
      * @param uncached - Whether it should fetch uncached.
@@ -97,9 +98,11 @@ export declare class HBAClient {
     getCryptoKeyPair(uncached?: boolean): Promise<CryptoKeyPair | null>;
     /**
      * Generate the bound auth token given a body.
+     * @param requestUrl - The request URL
+     * @param requestMethod  - The request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    generateBAT(body?: unknown): Promise<string | null>;
+    generateBAT(requestUrl: string | URL, requestMethod: string, body?: unknown): Promise<string | null>;
     /**
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.

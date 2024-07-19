@@ -1,5 +1,5 @@
 import * as dntShim from "../_dnt.shims.js";
-import { AUTH_TOKEN_SEPARATOR, decodeEntities, DEFAULT_FETCH_TOKEN_METADATA_URL, DEFAULT_FORCE_BAT_URLS, DEFAULT_INDEXED_DB_VERSION, DEFAULT_MATCH_ROBLOX_URL_BASE, FETCH_TOKEN_METADATA_REGEX, FETCH_TOKEN_METADATA_SELECTOR, FETCH_USER_DATA_REGEX, FETCH_USER_DATA_SELECTOR, TOKEN_HEADER_NAME, } from "./utils/constants.js";
+import { AUTH_TOKEN_SEPARATOR, BAT_SIGNATURE_VERSION, decodeEntities, DEFAULT_FETCH_TOKEN_METADATA_URL, DEFAULT_FORCE_BAT_URLS, DEFAULT_INDEXED_DB_VERSION, DEFAULT_MATCH_ROBLOX_URL_BASE, FETCH_TOKEN_METADATA_REGEX, FETCH_TOKEN_METADATA_SELECTOR, FETCH_USER_DATA_REGEX, FETCH_USER_DATA_SELECTOR, TOKEN_HEADER_NAME, } from "./utils/constants.js";
 import { getCryptoKeyPairFromDB, hashStringSha256, signWithKey } from "./utils/crypto.js";
 import { filterObject } from "./utils/filterObject.js";
 /**
@@ -35,13 +35,14 @@ export class HBAClient {
     /**
      * Generate the base headers required, it may be empty or only include `x-bound-auth-token`
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
+     * @param requestMethod  - The target request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    async generateBaseHeaders(requestUrl, includeCredentials, body) {
+    async generateBaseHeaders(requestUrl, requestMethod, includeCredentials, body) {
         if (!await this.isUrlIncludedInWhitelist(requestUrl, includeCredentials)) {
             return {};
         }
-        const token = await this.generateBAT(body);
+        const token = await this.generateBAT(requestUrl.toString(), requestMethod, body);
         if (!token) {
             return {};
         }
@@ -207,9 +208,11 @@ export class HBAClient {
     }
     /**
      * Generate the bound auth token given a body.
+     * @param requestUrl - The request URL
+     * @param requestMethod  - The request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    async generateBAT(body) {
+    async generateBAT(requestUrl, requestMethod, body) {
         const pair = await this.getCryptoKeyPair();
         if (!pair?.privateKey) {
             return null;
@@ -223,9 +226,14 @@ export class HBAClient {
             strBody = body;
         }
         const hashedBody = await hashStringSha256(strBody);
-        const payloadToSign = [hashedBody, timestamp].join(AUTH_TOKEN_SEPARATOR);
+        const payloadToSign = [
+            hashedBody,
+            timestamp,
+            requestUrl.toString(),
+            requestMethod.toUpperCase(),
+        ].join(AUTH_TOKEN_SEPARATOR);
         const signature = await signWithKey(pair.privateKey, payloadToSign);
-        return [hashedBody, timestamp, signature].join(AUTH_TOKEN_SEPARATOR);
+        return [BAT_SIGNATURE_VERSION, hashedBody, timestamp, signature].join(AUTH_TOKEN_SEPARATOR);
     }
     /**
      * Check whether the URL is supported for bound auth tokens.

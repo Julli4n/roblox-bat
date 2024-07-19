@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.decodeEntities = exports.TOKEN_SIGNATURE_ALGORITHM = exports.DEFAULT_FORCE_BAT_URLS = exports.DEFAULT_INDEXED_DB_VERSION = exports.DEFAULT_MATCH_ROBLOX_URL_BASE = exports.DEFAULT_FETCH_TOKEN_METADATA_URL = exports.AUTH_TOKEN_SEPARATOR = exports.FETCH_USER_DATA_REGEX = exports.FETCH_TOKEN_METADATA_REGEX = exports.FETCH_USER_DATA_SELECTOR = exports.FETCH_TOKEN_METADATA_SELECTOR = exports.TOKEN_HEADER_NAME = void 0;
+exports.decodeEntities = exports.TOKEN_SIGNATURE_ALGORITHM = exports.BAT_SIGNATURE_VERSION = exports.DEFAULT_FORCE_BAT_URLS = exports.DEFAULT_INDEXED_DB_VERSION = exports.DEFAULT_MATCH_ROBLOX_URL_BASE = exports.DEFAULT_FETCH_TOKEN_METADATA_URL = exports.AUTH_TOKEN_SEPARATOR = exports.FETCH_USER_DATA_REGEX = exports.FETCH_TOKEN_METADATA_REGEX = exports.FETCH_USER_DATA_SELECTOR = exports.FETCH_TOKEN_METADATA_SELECTOR = exports.TOKEN_HEADER_NAME = void 0;
 exports.TOKEN_HEADER_NAME = "x-bound-auth-token";
 //export const FETCH_TOKEN_URL = "https://apis.roblox.com/hba-service/v1/getServerNonce";
 exports.FETCH_TOKEN_METADATA_SELECTOR = 'meta[name="hardware-backed-authentication-data"]';
@@ -14,6 +14,7 @@ exports.DEFAULT_INDEXED_DB_VERSION = 1;
 exports.DEFAULT_FORCE_BAT_URLS = [
     "/account-switcher/v1/switch",
 ];
+exports.BAT_SIGNATURE_VERSION = "v1";
 exports.TOKEN_SIGNATURE_ALGORITHM = {
     name: "ECDSA",
     hash: { name: "SHA-256" },

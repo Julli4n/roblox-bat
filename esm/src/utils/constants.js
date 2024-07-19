@@ -11,6 +11,7 @@ export const DEFAULT_INDEXED_DB_VERSION = 1;
 export const DEFAULT_FORCE_BAT_URLS = [
     "/account-switcher/v1/switch",
 ];
+export const BAT_SIGNATURE_VERSION = "v1";
 export const TOKEN_SIGNATURE_ALGORITHM = {
     name: "ECDSA",
     hash: { name: "SHA-256" },

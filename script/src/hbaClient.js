@@ -61,13 +61,14 @@ class HBAClient {
     /**
      * Generate the base headers required, it may be empty or only include `x-bound-auth-token`
      * @param requestUrl - The target request URL, will be checked if it's supported for HBA.
+     * @param requestMethod  - The target request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    async generateBaseHeaders(requestUrl, includeCredentials, body) {
+    async generateBaseHeaders(requestUrl, requestMethod, includeCredentials, body) {
         if (!await this.isUrlIncludedInWhitelist(requestUrl, includeCredentials)) {
             return {};
         }
-        const token = await this.generateBAT(body);
+        const token = await this.generateBAT(requestUrl.toString(), requestMethod, body);
         if (!token) {
             return {};
         }
@@ -233,9 +234,11 @@ class HBAClient {
     }
     /**
      * Generate the bound auth token given a body.
+     * @param requestUrl - The request URL
+     * @param requestMethod  - The request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    async generateBAT(body) {
+    async generateBAT(requestUrl, requestMethod, body) {
         const pair = await this.getCryptoKeyPair();
         if (!pair?.privateKey) {
             return null;
@@ -249,9 +252,14 @@ class HBAClient {
             strBody = body;
         }
         const hashedBody = await (0, crypto_js_1.hashStringSha256)(strBody);
-        const payloadToSign = [hashedBody, timestamp].join(constants_js_1.AUTH_TOKEN_SEPARATOR);
+        const payloadToSign = [
+            hashedBody,
+            timestamp,
+            requestUrl.toString(),
+            requestMethod.toUpperCase(),
+        ].join(constants_js_1.AUTH_TOKEN_SEPARATOR);
         const signature = await (0, crypto_js_1.signWithKey)(pair.privateKey, payloadToSign);
-        return [hashedBody, timestamp, signature].join(constants_js_1.AUTH_TOKEN_SEPARATOR);
+        return [constants_js_1.BAT_SIGNATURE_VERSION, hashedBody, timestamp, signature].join(constants_js_1.AUTH_TOKEN_SEPARATOR);
     }
     /**
      * Check whether the URL is supported for bound auth tokens.

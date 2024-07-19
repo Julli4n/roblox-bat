@@ -8,6 +8,7 @@ export declare const DEFAULT_FETCH_TOKEN_METADATA_URL = "https://www.roblox.com/
 export declare const DEFAULT_MATCH_ROBLOX_URL_BASE = ".roblox.com";
 export declare const DEFAULT_INDEXED_DB_VERSION = 1;
 export declare const DEFAULT_FORCE_BAT_URLS: string[];
+export declare const BAT_SIGNATURE_VERSION = "v1";
 export declare const TOKEN_SIGNATURE_ALGORITHM: EcdsaParams & {
     hash: {
         name: string;
