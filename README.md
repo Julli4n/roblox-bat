@@ -22,7 +22,9 @@ is not feasible, especially when Open Cloud development is slow and extremely re
   `meta[name="hardware-backed-authentication-data"]` element.
 - Any requests to generate a token will check if the URL is supported, and then grab a private key
   from the Indexed DB `hbaStore` in the `hbaObjectStore` with the key `hba_keys`. The final
-  `x-bound-auth-token` key should be formatted like: `v1|sha256ofrequestbody|timestamp|signature`.
+  `x-bound-auth-token` key should be formatted like:
+  - Currently: `sha256ofrequestbody|timestamp|signatureoffirst2`
+  - In now removed code, it was changed to: `v1|sha256ofrequestbody|timestamp|signature`, the current state of the code in this repository reflects this.
 - If the URL is supported and it could find a key, `generateBaseHeaders` will return
   `{"x-bound-auth-token": string}`, otherwise `{}`
 
