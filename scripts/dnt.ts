@@ -1,9 +1,9 @@
 import { copy } from "jsr:@std/fs@0.223.0";
-import { build } from "jsr:@deno/dnt@0.41.1";
+import { build } from "jsr:@deno/dnt@0.41.3";
 
 await build({
     entryPoints: ["./mod.ts"],
-    outDir: "./npm",
+    outDir: "./npm/",
     compilerOptions: {
         lib: ["ES2021", "DOM"],
     },
