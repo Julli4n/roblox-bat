@@ -85,7 +85,7 @@ export declare class HBAClient {
      * @param requestMethod  - The target request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    generateBaseHeaders(requestUrl: string | URL, requestMethod: string, includeCredentials?: boolean, body?: unknown): Promise<Record<string, string>>;
+    generateBaseHeaders(requestUrl: string | URL, requestMethod?: string, includeCredentials?: boolean, body?: unknown): Promise<Record<string, string>>;
     /**
      * Get HBA token metadata.
      * @param uncached - Whether it should fetch uncached.
