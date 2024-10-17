@@ -136,7 +136,7 @@ export class HBAClient {
      */
     public async generateBaseHeaders(
         requestUrl: string | URL,
-        requestMethod: string,
+        requestMethod?: string,
         includeCredentials?: boolean,
         body?: unknown,
     ): Promise<Record<string, string>> {
