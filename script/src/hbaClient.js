@@ -238,7 +238,7 @@ class HBAClient {
      * @param requestMethod  - The request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    async generateBAT(requestUrl, requestMethod, body) {
+    async generateBAT(requestUrl, requestMethod = "GET", body) {
         const pair = await this.getCryptoKeyPair();
         if (!pair?.privateKey) {
             return null;

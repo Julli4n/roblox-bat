@@ -102,7 +102,7 @@ export declare class HBAClient {
      * @param requestMethod  - The request method
      * @param body - The request body. If the method does not support a body, leave it undefined.
      */
-    generateBAT(requestUrl: string | URL, requestMethod: string, body?: unknown): Promise<string | null>;
+    generateBAT(requestUrl: string | URL, requestMethod?: string, body?: unknown): Promise<string | null>;
     /**
      * Check whether the URL is supported for bound auth tokens.
      * @param url - The target URL.
