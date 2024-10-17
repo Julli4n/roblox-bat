@@ -341,7 +341,7 @@ export class HBAClient {
      */
     public async generateBAT(
         requestUrl: string | URL,
-        requestMethod: string,
+        requestMethod: string = "GET",
         body?: unknown,
     ): Promise<string | null> {
         const pair = await this.getCryptoKeyPair();
