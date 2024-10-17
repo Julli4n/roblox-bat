@@ -1,13 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCryptoKeyPairFromDB = exports.doesDatabaseExist = exports.signWithKey = exports.arrayBufferToBase64String = exports.hashStringSha256 = void 0;
+exports.hashStringSha256 = hashStringSha256;
+exports.arrayBufferToBase64String = arrayBufferToBase64String;
+exports.signWithKey = signWithKey;
+exports.doesDatabaseExist = doesDatabaseExist;
+exports.getCryptoKeyPairFromDB = getCryptoKeyPairFromDB;
 const constants_js_1 = require("./constants.js");
 async function hashStringSha256(str) {
     const uint8 = new TextEncoder().encode(str);
     const hashBuffer = await crypto.subtle.digest(constants_js_1.TOKEN_SIGNATURE_ALGORITHM.hash.name, uint8);
     return arrayBufferToBase64String(hashBuffer);
 }
-exports.hashStringSha256 = hashStringSha256;
 function arrayBufferToBase64String(arrayBuffer) {
     let res = "";
     const bytes = new Uint8Array(arrayBuffer);
@@ -17,12 +20,10 @@ function arrayBufferToBase64String(arrayBuffer) {
     }
     return btoa(res);
 }
-exports.arrayBufferToBase64String = arrayBufferToBase64String;
 async function signWithKey(privateKey, data) {
     const bufferResult = await crypto.subtle.sign(constants_js_1.TOKEN_SIGNATURE_ALGORITHM, privateKey, new TextEncoder().encode(data).buffer);
     return arrayBufferToBase64String(bufferResult);
 }
-exports.signWithKey = signWithKey;
 function doesDatabaseExist(dbName) {
     return new Promise((resolve) => {
         const db = indexedDB.open(dbName);
@@ -36,7 +37,6 @@ function doesDatabaseExist(dbName) {
         };
     });
 }
-exports.doesDatabaseExist = doesDatabaseExist;
 async function getCryptoKeyPairFromDB(dbName, dbObjectName, dbObjectChildId) {
     let targetVersion = 1;
     // we want Roblox to create the DB on their end, so we do not want to interfere
@@ -82,4 +82,3 @@ async function getCryptoKeyPairFromDB(dbName, dbObjectName, dbObjectChildId) {
         };
     });
 }
-exports.getCryptoKeyPairFromDB = getCryptoKeyPairFromDB;
