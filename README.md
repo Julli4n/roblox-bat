@@ -18,7 +18,7 @@ is not feasible, especially when Open Cloud development is slow and extremely re
 
 ## How it Works
 
-- On the first request, it will fetch metadata from `https://www.roblox.com/reference/blank` in the
+- On the first request, it will fetch metadata from `https://www.roblox.com/charts` in the
   `meta[name="hardware-backed-authentication-data"]` element.
 - Any requests to generate a token will check if the URL is supported, and then grab a private key
   from the Indexed DB `hbaStore` in the `hbaObjectStore` with the key `hba_keys`. The final
