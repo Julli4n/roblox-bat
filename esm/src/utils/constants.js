@@ -5,7 +5,7 @@ export const FETCH_USER_DATA_SELECTOR = 'meta[name="user-data"]';
 export const FETCH_TOKEN_METADATA_REGEX = /name="hardware-backed-authentication-data"(\s|.)+?data-is-secure-authentication-intent-enabled="(.+?)"(\s|.)+?data-is-bound-auth-token-enabled="(.+?)"(\s|.)+?data-bound-auth-token-whitelist="(.+?)"(\s|.)+?data-bound-auth-token-exemptlist="(.+?)"(\s|.)+?data-hba-indexed-db-name="(.+?)"(\s|.)+?data-hba-indexed-db-obj-store-name="(.+?)"(\s|.)+?data-hba-indexed-db-key-name="(.+?)"(\s|.)+?data-hba-indexed-db-version="(.+?)"/;
 export const FETCH_USER_DATA_REGEX = /<meta[^name=]name="user-data"/;
 export const AUTH_TOKEN_SEPARATOR = "|";
-export const DEFAULT_FETCH_TOKEN_METADATA_URL = "https://www.roblox.com/reference/blank";
+export const DEFAULT_FETCH_TOKEN_METADATA_URL = "https://www.roblox.com/charts";
 export const DEFAULT_MATCH_ROBLOX_URL_BASE = ".roblox.com";
 export const DEFAULT_INDEXED_DB_VERSION = 1;
 export const DEFAULT_FORCE_BAT_URLS = [

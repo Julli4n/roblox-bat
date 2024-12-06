@@ -9,7 +9,7 @@ exports.FETCH_USER_DATA_SELECTOR = 'meta[name="user-data"]';
 exports.FETCH_TOKEN_METADATA_REGEX = /name="hardware-backed-authentication-data"(\s|.)+?data-is-secure-authentication-intent-enabled="(.+?)"(\s|.)+?data-is-bound-auth-token-enabled="(.+?)"(\s|.)+?data-bound-auth-token-whitelist="(.+?)"(\s|.)+?data-bound-auth-token-exemptlist="(.+?)"(\s|.)+?data-hba-indexed-db-name="(.+?)"(\s|.)+?data-hba-indexed-db-obj-store-name="(.+?)"(\s|.)+?data-hba-indexed-db-key-name="(.+?)"(\s|.)+?data-hba-indexed-db-version="(.+?)"/;
 exports.FETCH_USER_DATA_REGEX = /<meta[^name=]name="user-data"/;
 exports.AUTH_TOKEN_SEPARATOR = "|";
-exports.DEFAULT_FETCH_TOKEN_METADATA_URL = "https://www.roblox.com/reference/blank";
+exports.DEFAULT_FETCH_TOKEN_METADATA_URL = "https://www.roblox.com/charts";
 exports.DEFAULT_MATCH_ROBLOX_URL_BASE = ".roblox.com";
 exports.DEFAULT_INDEXED_DB_VERSION = 1;
 exports.DEFAULT_FORCE_BAT_URLS = [
